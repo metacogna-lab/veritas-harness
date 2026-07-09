@@ -4,6 +4,7 @@
 - Write harness configuration to @harness/ basaed on the ingested documentation
 - Use research and the web for determining appropriate paths
 - Always create evals for your work.
+- Track errors
 - Use or create modular skills
 
 # GOALS:

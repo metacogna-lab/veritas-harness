@@ -23,7 +23,11 @@ import { createSafetyCheck, type ApprovalPolicy } from "../safety/index.ts";
 import { MissionStore } from "./store.ts";
 import type { ResearchPlan } from "../resources/research-plan.ts";
 import { planToStartOptions } from "../resources/research-plan.ts";
+import { evalPlanWithConfig, renderEvalReport } from "../resources/plan-eval.ts";
+import { digestSources } from "../resources/source-digest.ts";
 import type { MissionScope } from "../safety/scope.ts";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 export interface StartOptions {
   objective?: string;
@@ -42,12 +46,27 @@ export interface StartOptions {
   policy?: ApprovalPolicy;
   /** Event line sink (defaults to no-op; the CLI streams to stdout). */
   onEvent?: (line: string) => void;
+  /**
+   * Skip plan eval dogma gate (useful in tests with minimal fixture plans).
+   * Production code should never set this.
+   */
+  skipPlanEval?: boolean;
+  /** Skip source digest (e.g. dry-run or offline mode). */
+  skipDigest?: boolean;
 }
 
 export interface StartResult {
   id: string;
   result: AgentResult;
   snapshot: MissionSnapshot;
+}
+
+/** Thrown when a research plan fails the dogma gate. Message is the full eval report. */
+export class PlanEvalError extends Error {
+  constructor(report: string) {
+    super(report);
+    this.name = "PlanEvalError";
+  }
 }
 
 export class ControlPlane {
@@ -91,6 +110,31 @@ export class ControlPlane {
     const target = mapped?.target ?? opts.target;
     const loadoutName = mapped?.loadout ?? opts.loadout;
     const role = mapped?.role ?? opts.role;
+    const emit = opts.onEvent ?? (() => {});
+
+    // Plan eval dogma gate — required dimensions must pass before execution.
+    if (opts.plan && !opts.skipPlanEval) {
+      const evalResult = evalPlanWithConfig(opts.plan);
+      if (!evalResult.pass) {
+        throw new PlanEvalError(renderEvalReport(evalResult));
+      }
+      const advisoryFailed = evalResult.dimensions.filter((d) => !d.required && !d.pass);
+      if (advisoryFailed.length > 0) {
+        emit(`plan-eval: ⚠️  advisory: ${advisoryFailed.map((d) => d.id).join(", ")}`);
+      }
+      emit(`plan-eval: ✅ ${Math.round(evalResult.score * 100)}% (${evalResult.dimensions.filter((d) => d.pass).length}/${evalResult.dimensions.length} dimensions)`);
+    }
+
+    // Source digest — summarise plan sources before the agent loop starts.
+    if (opts.plan && !opts.skipDigest && opts.plan.sources.filter((s) => s.kind !== "lesson").length > 0) {
+      const harnessRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
+      await digestSources({
+        plan: opts.plan,
+        harnessRoot,
+        llm: this.llm,
+        onEvent: emit,
+      });
+    }
 
     if (!objective || !target) {
       throw new Error("start requires objective and target, or a research plan");
@@ -104,7 +148,6 @@ export class ControlPlane {
       opts.scopeOverride ?? mapped?.scope ?? loadout.targetAdapter.buildScope(target);
     const mission = new Mission({ objective, scope, findingValidator: evidenceGate });
 
-    const emit = opts.onEvent ?? (() => {});
     emit(`mission ${mission.id} started`);
     emit(`loadout: ${loadout.name} | ${loadout.targetAdapter.describeScope(scope)}`);
     if (mapped?.planNote) mission.record("note", mapped.planNote);

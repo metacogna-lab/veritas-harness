@@ -8,7 +8,6 @@ import { LLMBackbone } from "../llm/index.ts";
 import type { Transport, TransportResponse } from "../llm/types.ts";
 import type { ProviderConfig } from "../config/index.ts";
 import { loadResearchPlan } from "../resources/research-plan.ts";
-import { join } from "node:path";
 
 const cfg: ProviderConfig = {
   provider: "anthropic",
@@ -95,7 +94,8 @@ describe("ControlPlane lifecycle", () => {
     const plan = loadResearchPlan(planPath);
     const llm = scriptedLLM([{ text: "Research complete per plan.", usage: zero }]);
     const plane = new ControlPlane({ llm, store });
-    const { id } = await plane.start({ plan, target: dir });
+    // Example fixture plan has minimal phases/criteria; skip gates for this unit test.
+    const { id } = await plane.start({ plan, target: dir, skipPlanEval: true, skipDigest: true });
     const snap = store.load(id)!;
     expect(snap.objective).toBe(plan.objective);
     expect(snap.scope.paths).toContain("bench/scope-gate");

@@ -7,6 +7,8 @@ import { MissionStore } from "./store.ts";
 import { LLMBackbone } from "../llm/index.ts";
 import type { Transport, TransportResponse } from "../llm/types.ts";
 import type { ProviderConfig } from "../config/index.ts";
+import { loadResearchPlan } from "../resources/research-plan.ts";
+import { join } from "node:path";
 
 const cfg: ProviderConfig = {
   provider: "anthropic",
@@ -84,6 +86,21 @@ describe("ControlPlane lifecycle", () => {
     const plane = new ControlPlane({ llm: scriptedLLM([{ text: "x", usage: zero }]), store });
     expect(plane.status("missing")).toBeUndefined();
     expect(plane.report("missing")).toBeUndefined();
+  });
+
+  test("start with research plan uses plan objective and records plan note", async () => {
+    const store = await tmpStore();
+    const dir = await mkdtemp(join(tmpdir(), "veritas-code-"));
+    const planPath = join(import.meta.dir, "../../missions/example-slug/research-plan.json");
+    const plan = loadResearchPlan(planPath);
+    const llm = scriptedLLM([{ text: "Research complete per plan.", usage: zero }]);
+    const plane = new ControlPlane({ llm, store });
+    const { id } = await plane.start({ plan, target: dir });
+    const snap = store.load(id)!;
+    expect(snap.objective).toBe(plan.objective);
+    expect(snap.scope.paths).toContain("bench/scope-gate");
+    const note = snap.transcript.find((e) => e.kind === "note");
+    expect(note?.content).toContain("example-slug");
   });
 
   test("error path: an LLM failure marks the mission status error", async () => {

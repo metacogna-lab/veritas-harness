@@ -12,7 +12,8 @@
     "verify-claims": "bun scripts/verify-claims.mjs",
     "verify-finding": "bun scripts/verify-finding.mjs",
     "bench": "bun scripts/bench.mjs",
-    "lessons": "bun scripts/lessons.mjs"
+    "lessons": "bun scripts/lessons.mjs",
+    "ingest": "bun ../../ingest/scripts/ingest.mjs"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4",

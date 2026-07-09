@@ -47,6 +47,53 @@ export const codebaseAuditLoadout: Loadout = {
   ],
 };
 
+/** Research target: filesystem path or comma-separated hosts. */
+const researchAdapter: TargetAdapter = {
+  name: "research",
+  buildScope: (target: string): MissionScope => {
+    const trimmed = target.trim();
+    if (trimmed.includes("/") || trimmed.includes("\\")) {
+      return { hosts: [], paths: [trimmed] };
+    }
+    return {
+      hosts: trimmed.split(",").map((h) => h.trim()).filter(Boolean),
+      paths: [],
+    };
+  },
+  describeScope: (scope: MissionScope) => {
+    const parts: string[] = [];
+    if (scope.paths.length) parts.push(`paths: ${scope.paths.join(", ")}`);
+    if (scope.hosts.length) parts.push(`hosts: ${scope.hosts.join(", ")}`);
+    return parts.join(" | ") || "(empty scope)";
+  },
+};
+
+export const researchLoadout: Loadout = {
+  name: "research",
+  description: "Structured research missions driven by an ingested research-plan.json.",
+  toolNames: ["read_file", "list_dir", "http_get", "record_finding"],
+  targetAdapter: researchAdapter,
+  specialists: [
+    {
+      role: "researcher",
+      toolAllowlist: ["read_file", "list_dir", "http_get", "record_finding"],
+      systemPrompt:
+        "You are a careful researcher. Explore authorized paths and hosts using read_file, " +
+        "list_dir, and http_get. Stay within mission scope. Follow the research plan phases " +
+        "recorded in the mission transcript. " +
+        `${EVIDENCE_RULE} ${RECORD_RULE}`,
+    },
+    {
+      role: "analyst",
+      toolAllowlist: ["read_file", "record_finding"],
+      systemPrompt:
+        "You synthesize evidence from the mission transcript into findings. Use read_file only " +
+        "within scope to verify details. " +
+        `${EVIDENCE_RULE} ${RECORD_RULE}`,
+    },
+  ],
+};
+
 export const webReconLoadout: Loadout = {
   name: "web-recon",
   description: "Gather information from a set of explicitly authorized web hosts.",
@@ -64,7 +111,10 @@ export const webReconLoadout: Loadout = {
   ],
 };
 
-/** A registry pre-loaded with the two example loadouts. */
+/** A registry pre-loaded with example loadouts including research. */
 export function defaultLoadouts(): LoadoutRegistry {
-  return new LoadoutRegistry().register(codebaseAuditLoadout).register(webReconLoadout);
+  return new LoadoutRegistry()
+    .register(codebaseAuditLoadout)
+    .register(webReconLoadout)
+    .register(researchLoadout);
 }

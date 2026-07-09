@@ -24,6 +24,7 @@ core.
 | [04-phase-skills-and-consumability.md](04-phase-skills-and-consumability.md) | Self-extension skills, CLAUDE.md, slash commands, subagents, MCP exposure | Skills + Consumability |
 | [05-verification-and-benchmarks.md](05-verification-and-benchmarks.md) | Cross-cutting: eval suites, reproducibility CI gate, health checks | Cross-cutting |
 | [06-risk-register.md](06-risk-register.md) | Known risks, open questions, explicit boundaries | Cross-cutting |
+| [07-phase-ingest.md](07-phase-ingest.md) | NEW.md → research-plan.json ingest workflow | Add-on |
 
 ## Sequencing (non-negotiable order)
 

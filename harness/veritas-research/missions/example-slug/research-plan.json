@@ -1,0 +1,33 @@
+{
+  "version": "1",
+  "metadata": {
+    "slug": "example-slug",
+    "ingestedAt": "2026-07-09T12:00:00.000Z",
+    "ingestVersion": "0.1.0",
+    "model": "fixture/mock"
+  },
+  "objective": "Measure scope-gate pass@1 for black-box mode",
+  "loadout": "research",
+  "target": "bench/scope-gate",
+  "scope": {
+    "hosts": [],
+    "paths": ["bench/scope-gate", "src/safety"]
+  },
+  "specialists": [
+    { "role": "researcher", "focus": "scope gate behavior" },
+    { "role": "analyst", "focus": "synthesis and findings" }
+  ],
+  "phases": [
+    { "id": "p1", "description": "Run scope-gate bench black-box mode and capture results" }
+  ],
+  "sources": [
+    { "kind": "lesson", "path": "harness/veritas-research/resources/lessons.json" },
+    { "kind": "doc", "path": "agents/docs/processed/strategy.md" }
+  ],
+  "lessons": [],
+  "successCriteria": [
+    "Reproducible pass@1 via verify-claims",
+    "At least one confirmed finding with provenance"
+  ],
+  "benchmark": { "suite": "scope-gate", "mode": "black" }
+}

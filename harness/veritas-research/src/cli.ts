@@ -3,7 +3,8 @@
  * Control-plane CLI — the human front door.
  *
  *   veritas start "<objective>" --target <t> [--loadout <name>] [--role <r>]
- *                               [--max-steps <n>] [--pre-auth a,b,c]
+ *                               [--plan <research-plan.json>] [--max-steps <n>]
+ *   veritas ingest --input <NEW.md> [--slug <slug>]
  *   veritas status <id>
  *   veritas report <id>
  *   veritas loadouts
@@ -17,6 +18,7 @@ import { LLMBackbone } from "./llm/index.ts";
 import { ControlPlane } from "./control/plane.ts";
 import { MissionStore } from "./control/store.ts";
 import { defaultLoadouts } from "./agent/loadouts.ts";
+import { loadResearchPlan } from "./resources/research-plan.ts";
 
 const RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 
@@ -87,17 +89,37 @@ async function main(): Promise<number> {
     return 0;
   }
 
+  if (verb === "ingest") {
+    const { flags } = parseFlags(rest);
+    const input = flags.input;
+    if (!input) return usage("ingest --input <NEW.md> [--slug <slug>]");
+    const { spawnSync } = await import("node:child_process");
+    const { fileURLToPath } = await import("node:url");
+    const { dirname, join: pathJoin } = await import("node:path");
+    const repoRoot = pathJoin(dirname(fileURLToPath(import.meta.url)), "../../..");
+    const script = pathJoin(repoRoot, "ingest/scripts/ingest.mjs");
+    const args = [script, "--input", input];
+    if (flags.slug) args.push("--slug", flags.slug);
+    const r = spawnSync("bun", args, { stdio: "inherit", cwd: repoRoot });
+    return r.status ?? 1;
+  }
+
   if (verb === "start") {
     const { positionals, flags } = parseFlags(rest);
-    const objective = positionals[0];
-    const target = flags.target;
-    if (!objective || !target) return usage('start "<objective>" --target <t> [--loadout <name>]');
+    const planPath = flags.plan;
+    const plan = planPath ? loadResearchPlan(planPath) : undefined;
+    const objective = plan?.objective ?? positionals[0];
+    const target = plan?.target ?? flags.target;
+    if (!objective || !target) {
+      return usage('start "<objective>" --target <t> | start --plan <research-plan.json>');
+    }
     const plane = new ControlPlane({ llm: buildLLM(), store });
     const preAuth = flags["pre-auth"] ? flags["pre-auth"].split(",").map((s) => s.trim()) : undefined;
     const { id, result } = await plane.start({
       objective,
       target,
-      loadout: flags.loadout,
+      plan,
+      loadout: flags.loadout ?? plan?.loadout,
       role: flags.role,
       maxSteps: flags["max-steps"] ? Number(flags["max-steps"]) : undefined,
       policy: preAuth ? { preAuthorized: preAuth } : undefined,
@@ -107,7 +129,7 @@ async function main(): Promise<number> {
     return result.status === "error" ? 1 : 0;
   }
 
-  return usage("start | status | report | loadouts");
+  return usage("start | ingest | status | report | loadouts");
 }
 
 function usage(msg: string): number {

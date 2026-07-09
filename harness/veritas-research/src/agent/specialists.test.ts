@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { LoadoutRegistry } from "./specialists.ts";
-import { defaultLoadouts, codebaseAuditLoadout, webReconLoadout } from "./loadouts.ts";
+import { defaultLoadouts, codebaseAuditLoadout, webReconLoadout, researchLoadout } from "./loadouts.ts";
 import { Agent } from "./index.ts";
 import { LLMBackbone } from "../llm/index.ts";
 import type { Transport, TransportResponse } from "../llm/types.ts";
@@ -24,11 +24,12 @@ function fakeLLM(resp: TransportResponse): LLMBackbone {
 }
 
 describe("LoadoutRegistry", () => {
-  test("registers and retrieves the two example loadouts", () => {
+  test("registers codebase-audit, web-recon, and research loadouts", () => {
     const reg = defaultLoadouts();
     expect(reg.has("codebase-audit")).toBe(true);
     expect(reg.has("web-recon")).toBe(true);
-    expect(reg.list()).toHaveLength(2);
+    expect(reg.has("research")).toBe(true);
+    expect(reg.list()).toHaveLength(3);
   });
 
   test("duplicate loadout registration throws", () => {
@@ -45,6 +46,13 @@ describe("LoadoutRegistry", () => {
         specialists: [{ role: "x", systemPrompt: "p", toolAllowlist: ["http_get"] }],
       }),
     ).toThrow("does not expose");
+  });
+
+  test("research loadout exposes fs and web tools", () => {
+    expect(researchLoadout.toolNames.sort()).toEqual(
+      ["http_get", "list_dir", "read_file", "record_finding"].sort(),
+    );
+    expect(researchLoadout.specialists.map((s) => s.role)).toEqual(["researcher", "analyst"]);
   });
 
   test("target adapters build the domain's scope shape", () => {

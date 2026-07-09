@@ -39,6 +39,15 @@ bun run verify-claims          # scripts/verify-claims.mjs — re-derive every h
 bun run verify-finding         # scripts/verify-finding.mjs — run the refuter against a finding
 bun run bench                  # scripts/bench.mjs — run committed-oracle benchmark suites
 bun run lessons                # scripts/lessons.mjs — record/retrieve mission lessons
+bun run ingest --input ../../ingest/NEW.md   # compile research brief → research-plan.json
+bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan
+```
+
+Ingest tests run from **`ingest/`**:
+
+```
+cd ingest
+bun test                       # sanitize, parse, validate, mock-LLM integration
 ```
 
 The Claude Code CLI itself (the agent this harness is built with/for) is a global tool, installed
@@ -148,6 +157,18 @@ harness/veritas-research/
   .claude/            commands/, agents/
   bench/<suite>/      tasks.json + committed oracle.json per suite
   resources/          lessons.json (committed lesson store)
+  missions/<slug>/    ingested research-plan.json per research brief
+```
+
+Above `harness/`, the **`ingest/`** workflow compiles human research intent into plans:
+
+```
+ingest/
+  NEW.md              operator research brief (gitignored)
+  TEMP.md             template spec for LLM fitter
+  examples/           committed example briefs
+  src/                sanitize, parse, catalog, fit, validate
+  scripts/ingest.mjs  CLI entry
 ```
 
 Above `harness/`, this repo's own `agents/` tree is the meta-harness's operating workspace, not

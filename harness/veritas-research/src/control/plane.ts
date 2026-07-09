@@ -21,11 +21,18 @@ import { evidenceGate } from "../evidence/gate.ts";
 import { promoteFinding } from "../evidence/refuter.ts";
 import { createSafetyCheck, type ApprovalPolicy } from "../safety/index.ts";
 import { MissionStore } from "./store.ts";
+import type { ResearchPlan } from "../resources/research-plan.ts";
+import { planToStartOptions } from "../resources/research-plan.ts";
+import type { MissionScope } from "../safety/scope.ts";
 
 export interface StartOptions {
-  objective: string;
+  objective?: string;
   /** Domain target (e.g. a directory for codebase-audit, hosts for web-recon). */
-  target: string;
+  target?: string;
+  /** Validated research plan from ingest; overrides objective/loadout/target/scope. */
+  plan?: ResearchPlan;
+  /** Explicit scope override (used with plan.scope). */
+  scopeOverride?: MissionScope;
   /** Loadout name; defaults to the first registered loadout. */
   loadout?: string;
   /** Specialist role within the loadout; defaults to the first. */
@@ -79,16 +86,28 @@ export class ControlPlane {
   }
 
   async start(opts: StartOptions): Promise<StartResult> {
-    const loadout = this.resolveLoadout(opts.loadout);
-    const specialist = loadout.specialists.find((s) => s.role === opts.role) ?? loadout.specialists[0];
+    const mapped = opts.plan ? planToStartOptions(opts.plan) : undefined;
+    const objective = mapped?.objective ?? opts.objective;
+    const target = mapped?.target ?? opts.target;
+    const loadoutName = mapped?.loadout ?? opts.loadout;
+    const role = mapped?.role ?? opts.role;
+
+    if (!objective || !target) {
+      throw new Error("start requires objective and target, or a research plan");
+    }
+
+    const loadout = this.resolveLoadout(loadoutName);
+    const specialist = loadout.specialists.find((s) => s.role === role) ?? loadout.specialists[0];
     if (!specialist) throw new Error(`loadout "${loadout.name}" has no specialists`);
 
-    const scope = loadout.targetAdapter.buildScope(opts.target);
-    const mission = new Mission({ objective: opts.objective, scope, findingValidator: evidenceGate });
+    const scope =
+      opts.scopeOverride ?? mapped?.scope ?? loadout.targetAdapter.buildScope(target);
+    const mission = new Mission({ objective, scope, findingValidator: evidenceGate });
 
     const emit = opts.onEvent ?? (() => {});
     emit(`mission ${mission.id} started`);
     emit(`loadout: ${loadout.name} | ${loadout.targetAdapter.describeScope(scope)}`);
+    if (mapped?.planNote) mission.record("note", mapped.planNote);
 
     const safetyCheck = createSafetyCheck({ scope, policy: opts.policy });
     const registry = this.tools.subset(loadout.toolNames);

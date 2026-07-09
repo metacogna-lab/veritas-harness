@@ -4,12 +4,17 @@
  * LIVE (implemented here):
  *   - `recordLesson()` persists structured lessons from completed missions.
  *   - `retrieveLessons()` loads relevant past lessons by objective keyword overlap.
+ *   - `retrieveLessonsForPlanning()` surfaces relevant lessons as READ-ONLY advisory
+ *     text for planning — OPT-IN (disabled by default) and human-reviewed. It never
+ *     mutates prompts, tools, or scope; it only returns suggestions a planner may show.
  *
- * ROADMAP (not implemented — do not silently expand scope):
- *   - Automatic injection of retrieved lessons into orchestrator planning/decomposition.
- *   - Feedback loop that mutates specialist prompts or tool registries without human review.
+ * ROADMAP (still not implemented — do not silently expand scope):
+ *   - Automatic injection that mutates specialist prompts, tool registries, or
+ *     decomposition without a human in the loop. "The harness learns" is a deliberate
+ *     future decision, not a side effect of enabling advisory feedback.
  *
- * Recording is durable and committed; planning feedback is a deliberate future decision.
+ * Recording is durable and committed; advisory feedback is opt-in; autonomous
+ * self-modification remains gated behind human review (invariant #5).
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -34,6 +39,39 @@ export interface LessonInput {
   worked?: string[];
   failed?: string[];
   gaps?: string[];
+}
+
+/** Opt-in controls for surfacing lessons into planning. Disabled unless `enabled: true`. */
+export interface PlanningFeedbackOptions {
+  enabled: boolean;
+  limit?: number;
+}
+
+export interface PlanningFeedback {
+  enabled: boolean;
+  lessons: Lesson[];
+  /** Read-only advisory text a planner MAY surface. Empty when disabled or no matches. */
+  advisory: string;
+  /** Human-readable note describing the honest scope of this feedback. */
+  note: string;
+}
+
+/**
+ * Render retrieved lessons as a compact, read-only advisory block. Pure — takes
+ * lessons, returns text. It suggests; it never instructs the harness to change
+ * itself.
+ */
+export function formatPlanningAdvisory(lessons: Lesson[]): string {
+  if (lessons.length === 0) return "";
+  const lines = ["Prior-mission advisories (read-only; consider, do not auto-apply):"];
+  for (const l of lessons) {
+    const bits: string[] = [];
+    if (l.worked.length) bits.push(`worked: ${l.worked.join("; ")}`);
+    if (l.failed.length) bits.push(`failed: ${l.failed.join("; ")}`);
+    if (l.gaps.length) bits.push(`gaps: ${l.gaps.join("; ")}`);
+    lines.push(`- [${l.objective}] ${bits.join(" | ") || "no structured notes"}`);
+  }
+  return lines.join("\n");
 }
 
 /** Derive a structured lesson from a mission snapshot (heuristic extraction). */
@@ -135,6 +173,31 @@ export class LessonsStore {
       .sort((a, b) => b.score - a.score)
       .slice(0, limit)
       .map((x) => x.l);
+  }
+
+  /**
+   * OPT-IN advisory feedback for planning. When `enabled` is false (the default
+   * intent), returns an empty, disabled result — nothing is surfaced. When enabled,
+   * returns relevant lessons plus read-only advisory text. This is the honest
+   * boundary: enabling it shows suggestions; it never mutates prompts, tools, or
+   * scope, and never promotes itself to autonomous self-modification (invariant #5).
+   */
+  retrieveLessonsForPlanning(objective: string, opts: PlanningFeedbackOptions): PlanningFeedback {
+    if (!opts.enabled) {
+      return {
+        enabled: false,
+        lessons: [],
+        advisory: "",
+        note: "lessons→planning feedback is opt-in and currently disabled",
+      };
+    }
+    const lessons = this.retrieveLessons(objective, opts.limit ?? 5);
+    return {
+      enabled: true,
+      lessons,
+      advisory: formatPlanningAdvisory(lessons),
+      note: "advisory only — read-only suggestions; does not mutate prompts, tools, or scope",
+    };
   }
 
   list(): Lesson[] {

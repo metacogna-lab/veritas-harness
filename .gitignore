@@ -11,4 +11,4 @@ harness/veritas-research/missions/*
 !harness/veritas-research/missions/.gitkeep
 !harness/veritas-research/missions/example-slug/
 !harness/veritas-research/missions/example-slug/**
-*/blog/ 
+blog/

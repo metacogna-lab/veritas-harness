@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+# Reproduce before report (invariant #6): block a push whose headline numbers
+# cannot be re-derived from committed artifacts.
+set -e
+cd "$(dirname "$0")/.."
+echo "pre-push: verifying reproducible claims..."
+bun scripts/verify-claims.mjs

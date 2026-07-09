@@ -1,0 +1,27 @@
+{
+  "name": "veritas-research",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "module": "src/cli.ts",
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc",
+    "test": "bun test",
+    "doctor": "bun scripts/doctor.mjs",
+    "verify-claims": "bun scripts/verify-claims.mjs",
+    "verify-finding": "bun scripts/verify-finding.mjs",
+    "bench": "bun scripts/bench.mjs",
+    "lessons": "bun scripts/lessons.mjs"
+  },
+  "dependencies": {
+    "eventemitter3": "^5.0.4",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3"
+  }
+}

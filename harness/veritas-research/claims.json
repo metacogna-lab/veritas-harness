@@ -1,0 +1,12 @@
+[
+  {
+    "id": "int-smoke-confirmed",
+    "statement": "The INT smoke mission produced exactly 1 confirmed finding.",
+    "kind": "findings_count",
+    "args": {
+      "snapshot": "bench/int-smoke/mission.json",
+      "status": "confirmed"
+    },
+    "value": 1
+  }
+]

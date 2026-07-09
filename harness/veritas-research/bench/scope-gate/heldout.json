@@ -1,0 +1,4 @@
+{
+  "note": "Held-out task ids evaluated but never used to tune prompts/solver (plan 05 standing rule). For this white/black-box gate suite the solver is the deterministic scope gate, so all ids are effectively held out — none were used to fit anything.",
+  "heldout": ["sg-07", "sg-08", "sg-09", "sg-10"]
+}

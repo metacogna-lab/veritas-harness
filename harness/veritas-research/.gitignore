@@ -1,0 +1,14 @@
+node_modules
+out
+dist
+*.tgz
+coverage
+*.lcov
+logs
+*.log
+.env
+.env.*.local
+.DS_Store
+
+# veritas mission run store (runtime artifacts, not source)
+.veritas/

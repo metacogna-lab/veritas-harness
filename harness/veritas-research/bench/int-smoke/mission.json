@@ -1,0 +1,120 @@
+{
+  "id": "int-smoke",
+  "objective": "audit app.ts for a debug flag",
+  "scope": {
+    "hosts": [],
+    "paths": [
+      "<scope-path>"
+    ]
+  },
+  "status": "done",
+  "transcript": [
+    {
+      "seq": 0,
+      "timestamp": "<ts>",
+      "kind": "objective",
+      "content": "audit app.ts for a debug flag"
+    },
+    {
+      "seq": 1,
+      "timestamp": "<ts>",
+      "kind": "status",
+      "content": "running"
+    },
+    {
+      "seq": 2,
+      "timestamp": "<ts>",
+      "kind": "model",
+      "content": "(tool call)"
+    },
+    {
+      "seq": 3,
+      "timestamp": "<ts>",
+      "kind": "tool_call",
+      "content": "read_file",
+      "meta": {
+        "input": {
+          "path": "<scope-path>/app.ts"
+        }
+      }
+    },
+    {
+      "seq": 4,
+      "timestamp": "<ts>",
+      "kind": "observation",
+      "content": "export const debug = true;\n",
+      "meta": {
+        "tool": "read_file",
+        "ok": true
+      }
+    },
+    {
+      "seq": 5,
+      "timestamp": "<ts>",
+      "kind": "model",
+      "content": "(tool call)"
+    },
+    {
+      "seq": 6,
+      "timestamp": "<ts>",
+      "kind": "tool_call",
+      "content": "record_finding",
+      "meta": {
+        "input": {
+          "claim": "debug = true",
+          "observationSeq": 4
+        }
+      }
+    },
+    {
+      "seq": 7,
+      "timestamp": "<ts>",
+      "kind": "observation",
+      "content": "finding recorded (id=d0e6d58c-16d1-43f5-844d-2410b13c5fd7, status=proposed): debug = true",
+      "meta": {
+        "tool": "record_finding",
+        "ok": true
+      }
+    },
+    {
+      "seq": 8,
+      "timestamp": "<ts>",
+      "kind": "model",
+      "content": "app.ts sets debug = true."
+    },
+    {
+      "seq": 9,
+      "timestamp": "<ts>",
+      "kind": "note",
+      "content": "final answer produced"
+    },
+    {
+      "seq": 10,
+      "timestamp": "<ts>",
+      "kind": "status",
+      "content": "done"
+    },
+    {
+      "seq": 11,
+      "timestamp": "<ts>",
+      "kind": "note",
+      "content": "finding d0e6d58c-16d1-43f5-844d-2410b13c5fd7 -> confirmed",
+      "meta": {
+        "refutation": "evidence supports claim"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "finding-1",
+      "claim": "debug = true",
+      "provenance": {
+        "toolCall": "read_file",
+        "observationSeq": 4
+      },
+      "status": "confirmed",
+      "createdAt": "<ts>",
+      "refutation": "evidence supports claim"
+    }
+  ]
+}

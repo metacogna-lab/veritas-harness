@@ -1,6 +1,6 @@
 Initialize the Veritas harness from scratch.
 
-Follow `harness/veritas-research/skills/harness-init/SKILL.md`:
+Follow the meta-harness skill `skills/harness-init/SKILL.md` (target harness: `veritas-research`):
 - Walks from prerequisites → install → config → doctor → test → first mission
 - Use when setting up a fresh clone or onboarding a new operator
 

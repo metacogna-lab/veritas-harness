@@ -13,14 +13,14 @@ Benchmark the harness against committed ground truth — never against a model s
 ## Prerequisites
 
 ```bash
-cd harness/veritas-research
+cd harness/<harness>
 bun run doctor
 bun test
 ```
 
 ## Steps
 
-1. Read `harness/veritas-research/scripts/bench.mjs` for the runner contract:
+1. Read `harness/<harness>/scripts/bench.mjs` for the runner contract:
    - Each suite lives under `bench/<suite>/`
    - Requires `tasks.json`, `oracle.json`, and `solver.mjs`
    - Grades against oracle only; anti-fitting guard scans solver source
@@ -33,7 +33,7 @@ bun test
      id literals, no embedded oracle answers)
 3. Run the suite:
    ```bash
-   cd harness/veritas-research
+   cd harness/<harness>
    bun run bench <suite>
    ```
 4. Commit `bench/<suite>/results.json` produced by the runner.

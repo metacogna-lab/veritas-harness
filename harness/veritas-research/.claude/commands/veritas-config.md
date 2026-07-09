@@ -1,6 +1,6 @@
 Launch interactive harness configuration to generate src/config/local.json.
 
-Follow `harness/veritas-research/skills/harness-veritas-config/SKILL.md`.
+Follow the meta-harness skill `skills/harness-config/SKILL.md` (target harness: `veritas-research`).
 Use AskQuestion for each step (provider, model, fallbacks, Ollama baseUrl).
 Preview JSON and confirm before writing. Run `bun run doctor` before finishing.
 

@@ -1,0 +1,96 @@
+{
+  "suite": "scope-gate",
+  "generatedAt": "2026-07-09T07:58:47.986Z",
+  "summary": {
+    "black_box": {
+      "n": 4,
+      "passed": 4,
+      "pass_at_1": 1,
+      "wilson95": {
+        "low": 0.5101,
+        "high": 1
+      }
+    },
+    "white_box": {
+      "n": 6,
+      "passed": 6,
+      "pass_at_1": 1,
+      "wilson95": {
+        "low": 0.6097,
+        "high": 1
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "id": "sg-01",
+      "mode": "white",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-02",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-03",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-04",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-05",
+      "mode": "white",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-06",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-07",
+      "mode": "black",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-08",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-09",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-10",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    }
+  ]
+}

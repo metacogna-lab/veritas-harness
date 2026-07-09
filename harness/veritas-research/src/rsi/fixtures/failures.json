@@ -1,0 +1,32 @@
+[
+  {
+    "missionId": "m-1",
+    "terminalCause": "SCOPE DENIED: host \"api.example\" not in mission scope",
+    "causalState": "http_get invoked before the scope was widened to include the API host",
+    "evidenceRef": "obs:3"
+  },
+  {
+    "missionId": "m-2",
+    "terminalCause": "SCOPE DENIED: fs-read path \"/etc/hosts\" outside mission scope",
+    "causalState": "read_file targeted a system path; scope only covered /work",
+    "evidenceRef": "obs:2"
+  },
+  {
+    "missionId": "m-3",
+    "terminalCause": "SCOPE DENIED: host \"cdn.example\" not in mission scope",
+    "causalState": "follow-on fetch to a redirect host not listed in scope",
+    "evidenceRef": "obs:6"
+  },
+  {
+    "missionId": "m-4",
+    "terminalCause": "refuter retracted finding",
+    "causalState": "finding rested on a single observation the refuter could not corroborate",
+    "evidenceRef": "obs:5"
+  },
+  {
+    "missionId": "m-5",
+    "terminalCause": "tool threw: network timeout",
+    "causalState": "",
+    "evidenceRef": ""
+  }
+]

@@ -8,6 +8,7 @@
  *   veritas status <id>
  *   veritas report <id>
  *   veritas loadouts
+ *   veritas rsi            # self-improving loop, DRY-RUN only (human-gated apply)
  *
  * Scope is derived from the chosen loadout's target adapter. Gated tools run
  * unattended here, so anything above `active` fails safe unless explicitly
@@ -22,6 +23,7 @@ import { loadResearchPlan } from "./resources/research-plan.ts";
 import { runIngest } from "./ingest/ingest.ts";
 import { digestSources } from "./resources/source-digest.ts";
 import { evalPlanWithConfig, renderEvalReport } from "./resources/plan-eval.ts";
+import { rsiDryRun } from "./rsi/dry-run.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -91,6 +93,14 @@ async function main(): Promise<number> {
       return 1;
     }
     print(report);
+    return 0;
+  }
+
+  if (verb === "rsi") {
+    // Self-improving loop, DRY-RUN only: mine → propose → validate → human-gated apply.
+    // Never applies an edit; the apply stage is gated by requireHumanRelease (invariant #5).
+    const summary = await rsiDryRun();
+    print(summary);
     return 0;
   }
 

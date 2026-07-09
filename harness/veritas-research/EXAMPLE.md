@@ -83,7 +83,31 @@ bun run ingest --input ingest/NEW.md
 #   loadout: research
 ```
 
-Start a mission from the plan:
+Validate the plan against 8 research-dogma dimensions before executing:
+
+```bash
+bun run dev eval --plan missions/approval-gate-study/research-plan.json
+# ## Plan Eval: approval-gate-study
+# Status: ✅ PASS  Score: 87%
+# | falsifiable-question | required | ✅ | objective is specific and substantial |
+# | bounded-scope        | required | ✅ | scope bounded: paths=src/safety/       |
+# | phased-approach      | required | ✅ | 2 phases defined                       |
+# | measurable-success   | required | ✅ | 1 measurable criterion/criteria found  |
+```
+
+If required dimensions fail (e.g. only 1 phase, vague objective), fix the brief and
+re-run `bun run ingest`. Digest sources into summaries organised by idea:
+
+```bash
+bun run dev digest --plan missions/approval-gate-study/research-plan.json
+# digest: reading agents/docs/processed/strategy.md
+# digest: summarising agents/docs/processed/strategy.md
+# digest: wrote resources/summary/approval-gate-study/strategy.md
+# digest: synthesising 1 source(s)
+# digest: wrote resources/summary/approval-gate-study/synthesis.md
+```
+
+Start the mission (eval + digest run automatically before the agent loop):
 
 ```bash
 bun run dev start --plan missions/approval-gate-study/research-plan.json
@@ -159,6 +183,8 @@ The loop, gates, ledger, refuter, and control plane stay unchanged.
 | `bun run dev status <id>` | One-line mission status |
 | `bun run dev report <id>` | Full mission report |
 | `bun run ingest --input ingest/NEW.md` | Compile brief → research-plan.json |
+| `bun run dev eval --plan <path>` | Check plan against 8 dogma dimensions |
+| `bun run dev digest --plan <path>` | Digest sources → resources/summary/<slug>/ |
 | `bun run verify-finding --fixture <path>` | Refute a finding against committed evidence |
 | `bun run bench <suite>` | Run a benchmark suite |
 | `bun run verify-claims` | Re-derive all headline numbers |

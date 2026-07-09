@@ -85,11 +85,14 @@ function extractPdfText(absPath: string): string {
     let m: RegExpExecArray | null;
     while ((m = btEt.exec(raw)) !== null) {
       const block = m[1];
+      if (block === undefined) continue;
       // Extract string literals: (text) or <hex>
       const literals = /\(([^)\\]*(?:\\.[^)\\]*)*)\)/g;
       let t: RegExpExecArray | null;
       while ((t = literals.exec(block)) !== null) {
-        const decoded = t[1]
+        const literal = t[1];
+        if (literal === undefined) continue;
+        const decoded = literal
           .replace(/\\n/g, "\n")
           .replace(/\\r/g, "\r")
           .replace(/\\t/g, "\t")
@@ -137,8 +140,8 @@ async function summariseSource(
     truncated,
   ].join("\n");
 
-  const response = await llm.complete([{ role: "user", content: prompt }]);
-  return response.content.trim();
+  const response = await llm.complete({ messages: [{ role: "user", content: prompt }] });
+  return response.text.trim();
 }
 
 async function synthesiseSources(
@@ -175,8 +178,8 @@ async function synthesiseSources(
     sourceDump,
   ].join("\n");
 
-  const response = await llm.complete([{ role: "user", content: prompt }]);
-  return response.content.trim();
+  const response = await llm.complete({ messages: [{ role: "user", content: prompt }] });
+  return response.text.trim();
 }
 
 // ── writer ────────────────────────────────────────────────────────────────────

@@ -20,8 +20,8 @@ const snap: MissionSnapshot = {
       id: "f1",
       claim: "debug enabled",
       status: "confirmed",
-      provenance: { toolName: "read_file", observationSeq: 2 },
-      recordedAt: "t",
+      provenance: { toolCall: "read_file", observationSeq: 2 },
+      createdAt: "t",
     },
   ],
 };

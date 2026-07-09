@@ -109,7 +109,10 @@ describe("apply (human gate — invariant #5)", () => {
       policy: { releaser: async () => true }, // even a permissive releaser must not fire
     });
     expect(outcome.released).toBe(false);
-    expect(outcome.decision.reason).toContain("not eligible");
+    expect(outcome.decision.allowed).toBe(false);
+    if (!outcome.decision.allowed) {
+      expect(outcome.decision.reason).toContain("not eligible");
+    }
   });
 
   test("a human releaser can release an eligible proposal (still a human step to apply)", async () => {

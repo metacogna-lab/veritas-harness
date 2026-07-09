@@ -1,0 +1,22 @@
+{
+  "name": "__HARNESS_NAME__",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "module": "src/cli.ts",
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc",
+    "test": "bun test",
+    "doctor": "bun scripts/doctor.mjs"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.0",
+    "typescript": "^5.9.3"
+  }
+}

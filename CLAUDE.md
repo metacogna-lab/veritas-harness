@@ -158,10 +158,35 @@ a safe, non-dangerous, scope-gated subset of the harness over MCP.
 8. **Compose, don't fork.** New capability domains are a new Loadout/Tool registration, never a
    copy of the agent loop. (2.1)
 
-## Directory contract (canonical layout: `harness/veritas-research/`)
+## Directory contract
+
+### Meta-harness root (owns every harness; created via the pipeline, not by hand)
+
+```
+package.json          meta CLI: create-harness, list-harnesses, harness-doctor (bun)
+harnesses.json        the harness registry (ordered, 1-based; veritas-research is #1)
+meta/                 registry.ts, manifest.ts, create-harness.ts (ordered pipeline),
+                      scaffold.ts, list-harnesses.ts, doctor.ts
+meta/templates/harness-template/   the canonical 8-plane spine new harnesses start from
+meta/templates/skills/<pack>/      capability packs (starter, research) — harness-specific
+                                   skills installed into harness/<name>/skills/ at init
+skills/               GENERIC meta skills (operate/create ANY harness): harness-new,
+                      harness-init, harness-provider, harness-config, harness-tool-adder,
+                      harness-refuter, harness-eval-runner  (invariant #3)
+.claude/commands/     /new-harness (+ meta-level command wrappers)
+harness/<name>/       one independent harness package per project (see below)
+```
+
+New harnesses are created **only** through `bun run create-harness <name>` — the ordered
+pipeline that scaffolds `harness/<name>/`, installs capability-pack skills, writes its
+`harness.json`, and registers it (invariant #4). Harness-*specific* skills live inside the
+harness; generic skills live at the meta root (invariant #3).
+
+### Per-harness layout (canonical example: `harness/veritas-research/`)
 
 ```
 harness/veritas-research/
+  harness.json        manifest — registry identity, planes, capabilities, owned skills
   src/llm/            provider abstraction (LLMBackbone, provider + local fallback chain)
   src/config/         typed config, env-var key resolution, redact()
   src/agent/          the ReAct loop + specialists.ts (loadouts)
@@ -175,7 +200,8 @@ harness/veritas-research/
   src/ingest/         sanitize, parse, catalog, fit, validate pipeline
   src/mcp-server.ts   safe scope-gated MCP subset (no safety bypass)
   scripts/            verify-claims.mjs, verify-finding.mjs, bench.mjs, doctor.mjs, lessons.mjs, veritas-config.mjs
-  skills/             harness-tool-adder/, harness-eval-runner/, harness-refuter/, harness-ingest/, harness-provider/, harness-veritas-config/
+  skills/             harness-SPECIFIC skills only: harness-ingest/, harness-analysis/
+                      (generic operating skills live at the meta root skills/ — invariant #3)
   .claude/            commands/, agents/
   bench/<suite>/      tasks.json + committed oracle.json per suite
   resources/          lessons.json (committed lesson store)

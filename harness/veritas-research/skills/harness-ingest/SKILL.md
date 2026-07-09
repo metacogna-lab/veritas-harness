@@ -16,7 +16,7 @@ bun run doctor
 bun test
 ```
 
-If a provider isn't configured yet, use **harness-veritas-config** or **harness-provider**
+If a provider isn't configured yet, use **harness-config** or **harness-provider**
 first.
 
 ## Steps
@@ -52,7 +52,7 @@ first.
 
 ## Composing with other skills
 
-- Use **harness-provider** / **harness-veritas-config** if the LLM fitter fails due to a missing
+- Use **harness-provider** / **harness-config** if the LLM fitter fails due to a missing
   or misconfigured provider.
 - After a mission completes, use **harness-refuter** to verify any findings produced.
 - Use **harness-analysis** to roll up mission results across all harnesses into a research report.

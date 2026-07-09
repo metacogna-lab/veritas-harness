@@ -57,3 +57,4 @@ export const researchPlanSchema = z.object({
 
 export type ResearchPlan = z.infer<typeof researchPlanSchema>;
 export type ParsedResearchPlan = ResearchPlan;
+export type PlanSource = z.infer<typeof planSourceSchema>;

@@ -1,5 +1,5 @@
 ---
-name: harness-veritas-config
+name: harness-config
 description: >-
   Launch interactive harness configuration to generate src/config/local.json.
   Use when the user asks to "configure harness", "set up provider", "veritas config",
@@ -12,7 +12,7 @@ Generate `src/config/local.json` through an interactive flow.
 
 ## Steps
 
-1. Read `harness/veritas-research/PROVIDER.md` and `src/config/providers.ts` for provider/model
+1. Read `harness/<harness>/PROVIDER.md` and `src/config/providers.ts` for provider/model
    options. If the user wants to browse providers first, use **harness-provider**.
 2. Use **AskQuestion** (or equivalent) for each step:
    - **Default provider** — recommend `anthropic`; options from `PROVIDER_REGISTRY`
@@ -21,15 +21,15 @@ Generate `src/config/local.json` through an interactive flow.
    - **Ollama baseUrl** — only if `ollama` is in the chain (default `http://127.0.0.1:11434/v1`)
 3. **Preview** — show JSON before writing.
 4. **Confirm** — only write after user approves.
-5. **Write** `harness/veritas-research/src/config/local.json` (gitignored).
-6. **Verify** — run `bun run doctor` from `harness/veritas-research/`.
+5. **Write** `harness/<harness>/src/config/local.json` (gitignored).
+6. **Verify** — run `bun run doctor` from `harness/<harness>/`.
 
 ### Terminal fallback
 
 In terminal-only contexts (no AskQuestion), run:
 
 ```bash
-cd harness/veritas-research
+cd harness/<harness>
 bun run veritas-config
 ```
 

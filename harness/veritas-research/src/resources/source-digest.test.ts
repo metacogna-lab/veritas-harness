@@ -32,7 +32,7 @@ const BASE_PLAN: ResearchPlan = {
 
 function mockLLM(reply: string): LLMBackbone {
   return {
-    complete: async () => ({ content: reply, model: "mock", usage: { inputTokens: 0, outputTokens: 0 } }),
+    complete: async () => ({ text: reply, model: "mock", usage: { inputTokens: 0, outputTokens: 0 } }),
   } as unknown as LLMBackbone;
 }
 
@@ -95,7 +95,7 @@ describe("digestSources", () => {
     const root = makeHarness();
     let calls = 0;
     const trackingLLM = {
-      complete: async () => { calls++; return { content: "Forced summary.", model: "mock", usage: { inputTokens: 0, outputTokens: 0 } }; },
+      complete: async () => { calls++; return { text: "Forced summary.", model: "mock", usage: { inputTokens: 0, outputTokens: 0 } }; },
     } as unknown as LLMBackbone;
 
     await digestSources({ plan: BASE_PLAN, harnessRoot: root, llm: trackingLLM });

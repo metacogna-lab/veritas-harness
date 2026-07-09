@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "harnesses": [
+    {
+      "name": "veritas-research",
+      "index": 1,
+      "path": "harness/veritas-research",
+      "capabilities": ["research"],
+      "planes": [
+        "provider",
+        "safety",
+        "verification",
+        "memory",
+        "capability",
+        "execution",
+        "orchestration",
+        "control"
+      ],
+      "createdAt": "2026-07-09",
+      "status": "active"
+    }
+  ]
+}

@@ -14,7 +14,7 @@ asks to persist.**
 
 ## Steps
 
-1. Read `harness/veritas-research/PROVIDER.md` and `harness/veritas-research/src/config/providers.ts`
+1. Read `harness/<harness>/PROVIDER.md` and `harness/<harness>/src/config/providers.ts`
    (`PROVIDER_REGISTRY`, `availableModels`).
 2. Parse `$ARGUMENTS` as optional provider id: `anthropic`, `ollama`, `claude-code`, `codex`,
    `openai`, `openrouter` (`local` → `ollama`).
@@ -23,14 +23,14 @@ asks to persist.**
    from the registry.
 5. Present execution options from PROVIDER.md:
    - One-off: `HARNESS_PROVIDER` / `HARNESS_MODEL` env vars
-   - Persistent: `src/config/local.json` or use **harness-veritas-config** for the interactive
+   - Persistent: `src/config/local.json` or use **harness-config** for the interactive
      wizard
 6. **Do not write files or change env** unless the user explicitly confirms — then direct them
-   to **harness-veritas-config**.
+   to **harness-config**.
 
 ## Composing with other skills
 
-- **harness-veritas-config** is the interactive counterpart: use it when the user wants to
+- **harness-config** is the interactive counterpart: use it when the user wants to
   persist provider settings.
 - **harness-ingest** and **harness-tool-adder** may need provider config if the new tool or
   ingest step uses a different model; point the user here first to understand what's available.

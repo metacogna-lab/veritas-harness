@@ -20,6 +20,12 @@ export interface ResourcesCatalog {
   lessonsPath: string;
   sources: CatalogSource[];
   relevantLessonIds: string[];
+  /**
+   * Read-only advisory text derived from prior-mission lessons, present ONLY when
+   * planning feedback is explicitly opted in (`lessonsPlanningFeedback: true`).
+   * Empty string otherwise. A planner may surface it; it never mutates anything.
+   */
+  planningAdvisory: string;
 }
 
 const RESOURCE_MODULE_NAMES = ["lessons.ts", "research-plan.ts"];
@@ -42,6 +48,8 @@ export function buildResourcesCatalog(opts: {
   harnessRoot?: string;
   objective: string;
   extraSources?: string[];
+  /** OPT-IN: surface prior-mission lessons as read-only planning advisory. Default false. */
+  lessonsPlanningFeedback?: boolean;
 }): ResourcesCatalog {
   const harnessRoot = opts.harnessRoot ?? defaultHarnessRoot();
   const repoRoot = opts.repoRoot ?? defaultRepoRoot();
@@ -80,9 +88,15 @@ export function buildResourcesCatalog(opts: {
   }
 
   let relevantLessonIds: string[] = [];
+  let planningAdvisory = "";
   if (existsSync(lessonsPath)) {
     const store = new LessonsStore(lessonsPath);
     relevantLessonIds = store.retrieveLessons(opts.objective).map((l) => l.id);
+    // Opt-in: only build advisory text when explicitly enabled (honest scope).
+    const feedback = store.retrieveLessonsForPlanning(opts.objective, {
+      enabled: opts.lessonsPlanningFeedback === true,
+    });
+    planningAdvisory = feedback.advisory;
   }
 
   return {
@@ -92,6 +106,7 @@ export function buildResourcesCatalog(opts: {
     lessonsPath,
     sources,
     relevantLessonIds,
+    planningAdvisory,
   };
 }
 

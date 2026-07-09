@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { LessonsStore, lessonFromSnapshot, type Lesson } from "./lessons.ts";
+import { LessonsStore, lessonFromSnapshot, formatPlanningAdvisory, type Lesson } from "./lessons.ts";
 import type { MissionSnapshot } from "../mission/types.ts";
 
 const snap: MissionSnapshot = {
@@ -68,5 +68,43 @@ describe("lessons", () => {
     const lesson = store.recordFromSnapshot(snap);
     expect(lesson.id).toBe("lesson-m-1");
     expect(store.list()).toHaveLength(1);
+  });
+
+  test("retrieveLessonsForPlanning is OFF by default — surfaces nothing", () => {
+    const dir = mkdtempSync(join(tmpdir(), "veritas-lessons-"));
+    const store = new LessonsStore(join(dir, "lessons.json"));
+    store.recordLesson({ missionId: "m-1", objective: "audit app.ts for debug flag", worked: ["found it"] });
+
+    const disabled = store.retrieveLessonsForPlanning("audit debug flag in app.ts", { enabled: false });
+    expect(disabled.enabled).toBe(false);
+    expect(disabled.lessons).toHaveLength(0);
+    expect(disabled.advisory).toBe("");
+  });
+
+  test("retrieveLessonsForPlanning surfaces read-only advisory when opted in", () => {
+    const dir = mkdtempSync(join(tmpdir(), "veritas-lessons-"));
+    const store = new LessonsStore(join(dir, "lessons.json"));
+    store.recordLesson({ missionId: "m-1", objective: "audit app.ts for debug flag", worked: ["read_file found debug=true"] });
+
+    const enabled = store.retrieveLessonsForPlanning("audit debug flag in app.ts", { enabled: true });
+    expect(enabled.enabled).toBe(true);
+    expect(enabled.lessons).toHaveLength(1);
+    expect(enabled.advisory).toContain("read-only");
+    expect(enabled.advisory).toContain("read_file found debug=true");
+  });
+
+  test("formatPlanningAdvisory is empty for no lessons and never prescribes mutation", () => {
+    expect(formatPlanningAdvisory([])).toBe("");
+    const lesson: Lesson = {
+      id: "l1",
+      missionId: "m1",
+      objective: "obj",
+      worked: ["w"],
+      failed: ["f"],
+      gaps: ["g"],
+      recordedAt: "t",
+    };
+    const text = formatPlanningAdvisory([lesson]);
+    expect(text).toContain("do not auto-apply");
   });
 });

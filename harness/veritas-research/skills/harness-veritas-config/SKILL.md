@@ -3,7 +3,7 @@ name: harness-veritas-config
 description: >-
   Launch interactive harness configuration to generate src/config/local.json.
   Use when the user asks to "configure harness", "set up provider", "veritas config",
-  "generate local.json", or run /veritas-config.
+  "generate local.json", "persist provider settings", or run /veritas-config.
 ---
 
 # Veritas Config Wizard
@@ -12,7 +12,8 @@ Generate `src/config/local.json` through an interactive flow.
 
 ## Steps
 
-1. Read `harness/veritas-research/PROVIDER.md` and `src/config/providers.ts` for provider/model options.
+1. Read `harness/veritas-research/PROVIDER.md` and `src/config/providers.ts` for provider/model
+   options. If the user wants to browse providers first, use **harness-provider**.
 2. Use **AskQuestion** (or equivalent) for each step:
    - **Default provider** — recommend `anthropic`; options from `PROVIDER_REGISTRY`
    - **Model** — show `availableModels` for chosen provider; allow custom string (Ollama tags)
@@ -44,6 +45,12 @@ bun run veritas-config
 }
 ```
 
+## Composing with other skills
+
+- Use **harness-provider** first if the user isn't sure which provider they want.
+- After generating `local.json`, **harness-ingest** and missions will automatically pick up the
+  new provider from config.
+
 ## Hard rules
 
 - Never commit `local.json` — it is gitignored.
@@ -52,4 +59,4 @@ bun run veritas-config
 
 ## Don't mark done until
 
-- `local.json` is written (or user declined) and `bun run doctor` passes.
+`local.json` is written (or user declined) and `bun run doctor` passes.

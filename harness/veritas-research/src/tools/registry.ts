@@ -11,6 +11,7 @@
 import { z } from "zod";
 import type { ScopeTarget, ScopeCall, ScopeDecision } from "../safety/scope.ts";
 import type { ToolSchema } from "../llm/types.ts";
+import type { TerminalActionKind } from "../safety/human-release.ts";
 
 /**
  * Risk tiers, ordered by escalation. `safe`/`active` are ungated; the approval
@@ -26,6 +27,13 @@ export interface Tool<I = unknown> {
   riskTier: RiskTier;
   /** Declared side-effect targets for the scope gate. Omit for inert tools. */
   scopeTargets?: (input: I) => ScopeTarget[];
+  /**
+   * When true, `run()` does not execute until explicit human release (invariant #5).
+   * The harness stops one step short and returns a draft observation instead.
+   */
+  requiresHumanRelease?: boolean;
+  /** Kind of terminal action for audit/release policy. Defaults to `other`. */
+  terminalActionKind?: TerminalActionKind;
   run: (input: I) => Promise<string>;
 }
 

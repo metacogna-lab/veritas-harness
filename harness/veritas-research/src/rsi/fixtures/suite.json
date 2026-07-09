@@ -1,0 +1,4 @@
+{
+  "heldIn": ["src/safety/scope.test.ts"],
+  "heldOut": ["src/agent/index.test.ts", "src/tools/registry.test.ts", "src/evidence/gate.test.ts"]
+}

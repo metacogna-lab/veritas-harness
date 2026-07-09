@@ -18,7 +18,7 @@
 import { readFileSync } from "node:fs";
 import { refuteFinding } from "../src/evidence/refuter.ts";
 import { LLMBackbone } from "../src/llm/index.ts";
-import { loadConfig, providerConfig } from "../src/config/index.ts";
+import { loadConfig, providerChain } from "../src/config/index.ts";
 
 const args = process.argv.slice(2);
 const fixture = args.includes("--fixture");
@@ -51,8 +51,8 @@ function fixtureRefuter() {
 
 function realRefuter() {
   const config = loadConfig();
-  const primary = providerConfig(config);
-  if (!primary || !primary.apiKey) {
+  const primary = providerChain(config)[0];
+  if (!primary || (!primary.apiKey && primary.provider !== "ollama")) {
     console.error("no provider key wired for the refuter. Set a key or use --fixture.");
     process.exit(2);
   }

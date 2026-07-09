@@ -1,0 +1,30 @@
+{
+  "defaultProvider": "anthropic",
+  "providers": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5"
+    },
+    {
+      "provider": "claude-code",
+      "model": "claude-sonnet-5"
+    },
+    {
+      "provider": "codex",
+      "model": "o3"
+    },
+    {
+      "provider": "ollama",
+      "model": "qwen3-coder:latest",
+      "baseUrl": "http://127.0.0.1:11434/v1"
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-4o-mini"
+    },
+    {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-5"
+    }
+  ]
+}

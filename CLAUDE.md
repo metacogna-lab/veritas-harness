@@ -39,20 +39,38 @@ bun run verify-claims          # scripts/verify-claims.mjs — re-derive every h
 bun run verify-finding         # scripts/verify-finding.mjs — run the refuter against a finding
 bun run bench                  # scripts/bench.mjs — run committed-oracle benchmark suites
 bun run lessons                # scripts/lessons.mjs — record/retrieve mission lessons
-bun run ingest --input ../../ingest/NEW.md   # compile research brief → research-plan.json
+bun run ingest --input ingest/NEW.md   # compile research brief → research-plan.json
 bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan
+bun run veritas-config             # interactive local.json wizard (terminal)
 ```
 
-Ingest tests run from **`ingest/`**:
-
-```
-cd ingest
-bun test                       # sanitize, parse, validate, mock-LLM integration
-```
+Slash commands: `/ingest`, `/provider`, `/veritas-config` (see `skills/` and `.claude/commands/`).
 
 The Claude Code CLI itself (the agent this harness is built with/for) is a global tool, installed
 separately: `npm install -g @anthropic-ai/claude-code` (Node 18+; this one stays npm since it's
 not this project's dependency tree).
+
+### Model / provider selection
+
+Config lives in **`harness/veritas-research/src/config/`** (`default.json` + optional gitignored
+`local.json`). Default provider is **Anthropic (Claude API)** — not Ollama. See **`PROVIDER.md`**
+for operator guide; use `/provider [name]` for model catalog info.
+
+```bash
+# One-off provider switch
+HARNESS_PROVIDER=ollama HARNESS_MODEL=qwen3-coder:latest bun run dev start ...
+HARNESS_PROVIDER=claude-code bun run ingest --input ingest/NEW.md
+HARNESS_PROVIDER=codex bun run dev start ...
+
+# One-off model switch (keeps default provider)
+HARNESS_MODEL=claude-opus-4-8 bun run dev start "objective" --target .
+
+# Persistent overrides
+cp src/config/local.example.json src/config/local.json
+# or: bun run veritas-config
+```
+
+Set `ANTHROPIC_API_KEY` for the default provider. See `PROVIDER.md` and `src/config/README.md`.
 
 ## What is being built
 
@@ -150,25 +168,17 @@ harness/veritas-research/
   src/mission/        the Mission object — append-only transcript + findings
   src/evidence/       provenance gate + refuter
   src/orchestration/  ADV-tier decomposition orchestrator (honest decomposition only)
-  src/resources/      lessons.ts (recording live; planning feedback roadmap)
+  src/resources/      lessons.ts, research-plan.ts
+  src/ingest/         sanitize, parse, catalog, fit, validate pipeline
   src/mcp-server.ts   safe scope-gated MCP subset (no safety bypass)
-  scripts/            verify-claims.mjs, verify-finding.mjs, bench.mjs, doctor.mjs, lessons.mjs
-  skills/             harness-tool-adder/, harness-eval-runner/, harness-refuter/
+  scripts/            verify-claims.mjs, verify-finding.mjs, bench.mjs, doctor.mjs, lessons.mjs, veritas-config.mjs
+  skills/             harness-tool-adder/, harness-eval-runner/, harness-refuter/, harness-ingest/, harness-provider/, harness-veritas-config/
   .claude/            commands/, agents/
   bench/<suite>/      tasks.json + committed oracle.json per suite
   resources/          lessons.json (committed lesson store)
+  ingest/             NEW.md (gitignored), TEMP.md, examples/
   missions/<slug>/    ingested research-plan.json per research brief
-```
-
-Above `harness/`, the **`ingest/`** workflow compiles human research intent into plans:
-
-```
-ingest/
-  NEW.md              operator research brief (gitignored)
-  TEMP.md             template spec for LLM fitter
-  examples/           committed example briefs
-  src/                sanitize, parse, catalog, fit, validate
-  scripts/ingest.mjs  CLI entry
+  PROVIDER.md         operator guide for provider/model selection
 ```
 
 Above `harness/`, this repo's own `agents/` tree is the meta-harness's operating workspace, not

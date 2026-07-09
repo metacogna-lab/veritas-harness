@@ -6,11 +6,11 @@ Dependencies: BASIC+INT harness spine under `harness/veritas-research/` (loadout
 
 ## What this adds
 
-An `ingest/` meta-harness workflow upstream of mission execution:
+An ingest workflow inside the harness package, upstream of mission execution:
 
 1. Parse and sanitize `NEW.md` (untrusted input)
 2. LLM-primary fit to `TEMP.md` template schema
-3. Pull resources from `harness/veritas-research/src/resources/` and `resources/lessons.json`
+3. Pull resources from `src/resources/` and `resources/lessons.json`
 4. Zod-validate output
 5. Write `missions/<slug>/research-plan.json`
 6. Control plane consumes plan via `veritas start --plan`
@@ -18,14 +18,12 @@ An `ingest/` meta-harness workflow upstream of mission execution:
 ## Directory layout
 
 ```
-ingest/
-  NEW.md              operator slot (gitignored)
-  TEMP.md             template + schema documentation
-  examples/           committed example briefs
-  src/                sanitize, parse, catalog, fit, validate, ingest
-  scripts/ingest.mjs  CLI entry
-
 harness/veritas-research/
+  ingest/
+    NEW.md              operator slot (gitignored)
+    TEMP.md             template + schema documentation
+    examples/           committed example briefs
+  src/ingest/           sanitize, parse, catalog, fit, validate, ingest orchestrator
   missions/<slug>/research-plan.json
   src/resources/research-plan.ts
   src/agent/loadouts.ts  (+ research loadout)
@@ -34,19 +32,19 @@ harness/veritas-research/
 ## Tasks
 
 ### 7.1 Schema and sanitization
-- [x] `ingest/src/schema.ts` — Zod `ResearchPlan` schema (single source of truth)
-- [x] `ingest/src/sanitize.ts` — zero-width strip, injection pattern block
-- [x] `ingest/src/parse-intent.ts` — NEW.md frontmatter + ## sections
+- [x] `src/ingest/schema.ts` — Zod `ResearchPlan` schema (single source of truth)
+- [x] `src/ingest/sanitize.ts` — zero-width strip, injection pattern block
+- [x] `src/ingest/parse-intent.ts` — NEW.md frontmatter + ## sections
 - [x] Unit tests for each module
 
 ### 7.2 Resources catalog
-- [x] `ingest/src/resources-catalog.ts` — lessons store + resource modules + NEW.md sources
+- [x] `src/ingest/resources-catalog.ts` — lessons store + resource modules + NEW.md sources
 - [x] Extensible for future `src/resources/*` modules
 
 ### 7.3 LLM fitter + validation gate
-- [x] `ingest/src/fit-intent.ts` — LLM-primary with retry on Zod failure (max 2)
-- [x] `ingest/src/validate.ts` — `parseLastObject` + Zod
-- [x] `ingest/scripts/ingest.mjs` — CLI
+- [x] `src/ingest/fit-intent.ts` — LLM-primary with retry on Zod failure (max 2)
+- [x] `src/ingest/validate.ts` — `parseLastObject` + Zod
+- [x] `src/cli.ts` — `ingest` verb (inline, no subprocess)
 
 ### 7.4 Harness consumption
 - [x] `research` loadout in `loadouts.ts`
@@ -68,7 +66,7 @@ harness/veritas-research/
 
 ## Definition of done
 
-- [x] `bun test` green in `ingest/` and `harness/veritas-research/`
+- [x] `bun test` green in `harness/veritas-research/`
 - [x] Mock-LLM integration test produces valid plan from example NEW.md
 - [x] Golden `missions/example-slug/research-plan.json` loads via `loadResearchPlan`
 - [x] `veritas start --plan` uses plan objective/scope and records plan note

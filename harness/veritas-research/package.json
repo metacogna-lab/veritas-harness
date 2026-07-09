@@ -13,7 +13,8 @@
     "verify-finding": "bun scripts/verify-finding.mjs",
     "bench": "bun scripts/bench.mjs",
     "lessons": "bun scripts/lessons.mjs",
-    "ingest": "bun ../../ingest/scripts/ingest.mjs"
+    "ingest": "tsx src/cli.ts ingest",
+    "veritas-config": "bun scripts/veritas-config.mjs"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4",

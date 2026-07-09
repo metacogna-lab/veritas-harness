@@ -58,13 +58,13 @@ describe("LLMBackbone native mode", () => {
 });
 
 describe("LLMBackbone shim mode", () => {
-  test("parses tool calls from text for a non-native (local) provider", async () => {
+  test("parses tool calls from text for a non-native (ollama) provider", async () => {
     let sentSystem = "";
     const transport: Transport = async (_c, req): Promise<TransportResponse> => {
       sentSystem = req.system ?? "";
       return { text: '{"tool":"read_file","input":{"path":"a"}}', usage: zeroUsage };
     };
-    const llm = new LLMBackbone({ configs: [cfg("local")], transport });
+    const llm = new LLMBackbone({ configs: [cfg("ollama")], transport });
     const res = await llm.complete({
       messages: [{ role: "user", content: "read a" }],
       tools: [{ name: "read_file", description: "read", parameters: { type: "object" } }],
@@ -79,7 +79,7 @@ describe("LLMBackbone shim mode", () => {
       text: 'Reasoning... {"final":"the sky is blue"}',
       usage: zeroUsage,
     });
-    const llm = new LLMBackbone({ configs: [cfg("local")], transport });
+    const llm = new LLMBackbone({ configs: [cfg("ollama")], transport });
     const res = await llm.complete({ messages: [{ role: "user", content: "?" }] });
     expect(res.text).toBe("the sky is blue");
     expect(res.toolCalls).toEqual([]);

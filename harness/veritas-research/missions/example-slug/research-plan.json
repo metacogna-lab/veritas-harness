@@ -21,7 +21,7 @@
     { "id": "p1", "description": "Run scope-gate bench black-box mode and capture results" }
   ],
   "sources": [
-    { "kind": "lesson", "path": "harness/veritas-research/resources/lessons.json" },
+    { "kind": "lesson", "path": "resources/lessons.json" },
     { "kind": "doc", "path": "agents/docs/processed/strategy.md" }
   ],
   "lessons": [],

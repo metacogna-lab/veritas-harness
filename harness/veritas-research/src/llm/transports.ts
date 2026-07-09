@@ -1,15 +1,14 @@
 /**
  * Real HTTP transports. Production paths — never exercised in tests (tests
- * inject a fake transport). Two shapes cover all four providers:
+ * inject a fake transport). Two HTTP shapes cover API providers:
  *   - anthropic: Messages API
- *   - openai-compatible: OpenAI Chat Completions (openai, openrouter, local/ollama)
+ *   - openai-compatible: OpenAI Chat Completions (openai, openrouter, ollama)
  *
- * Tool schemas are handed to native function-calling where the provider
- * supports it; the text-mode shim in shim.ts covers the rest and is applied by
- * LLMBackbone, not here.
+ * CLI providers (claude-code, codex) route to cli-transport.ts.
  */
 import type { ProviderConfig } from "../config/index.ts";
 import type { CompletionRequest, Transport, TransportResponse, ToolCall } from "./types.ts";
+import { cliTransport, isCliProvider } from "./cli-transport.ts";
 
 function requireKey(cfg: ProviderConfig): string {
   if (!cfg.apiKey) {
@@ -70,7 +69,7 @@ const anthropicTransport: Transport = async (cfg, req, signal): Promise<Transpor
 };
 
 const openaiCompatibleTransport: Transport = async (cfg, req, signal): Promise<TransportResponse> => {
-  const key = cfg.provider === "local" ? (cfg.apiKey ?? "not-needed") : requireKey(cfg);
+  const key = cfg.provider === "ollama" ? (cfg.apiKey ?? "not-needed") : requireKey(cfg);
   const messages = [
     ...(req.system ? [{ role: "system", content: req.system }] : []),
     ...req.messages.map((m) => ({
@@ -125,5 +124,6 @@ function safeArgs(raw: unknown): Record<string, unknown> {
 
 /** Select the real transport for a provider. */
 export function defaultTransport(cfg: ProviderConfig): Transport {
+  if (isCliProvider(cfg.provider)) return cliTransport(cfg);
   return cfg.provider === "anthropic" ? anthropicTransport : openaiCompatibleTransport;
 }

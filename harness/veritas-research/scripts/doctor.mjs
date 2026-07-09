@@ -4,14 +4,11 @@
  *
  * Verifies the environment is sane before a mission starts:
  *   - Bun / Node version,
- *   - config loads and does NOT expose secrets,
- *   - at least one provider has a key wired (or local is reachable),
+ *   - config loads from src/config/ and does NOT expose secrets,
+ *   - active provider credentials or CLI binary reachability,
  *   - required PATH tools exist.
- *
- * Human-readable ✅/❌ output; non-zero exit on any hard failure. Warnings
- * (⚠️) do not fail the run.
  */
-import { loadConfig, redactedConfig } from "../src/config/index.ts";
+import { loadConfig, redactedConfig, configDirectory, getProviderDef } from "../src/config/index.ts";
 
 const checks = [];
 function ok(name, detail) {
@@ -24,7 +21,6 @@ function fail(name, detail) {
   checks.push({ level: "fail", name, detail });
 }
 
-// Bun version
 try {
   const v = process.versions.bun;
   if (v) ok("Bun runtime", `v${v}`);
@@ -33,15 +29,18 @@ try {
   warn("Bun runtime", "unknown");
 }
 
-// Node version (>= 18)
 const nodeMajor = Number(process.versions.node.split(".")[0]);
 if (nodeMajor >= 18) ok("Node version", `v${process.versions.node}`);
 else fail("Node version", `v${process.versions.node} (need >= 18)`);
 
-// Config loads without throwing, and redaction hides secrets.
 try {
   const config = loadConfig();
-  ok("Config loads", `defaultProvider=${config.defaultProvider}, ${config.providers.length} provider(s)`);
+  const active = config.providers[0];
+  ok(
+    "Config loads",
+    `defaultProvider=${config.defaultProvider}, active=${active?.provider}/${active?.model}, ${config.providers.length} in chain`,
+  );
+  ok("Config directory", configDirectory());
 
   const redacted = redactedConfig(config);
   const serialized = JSON.stringify(redacted);
@@ -49,24 +48,33 @@ try {
   if (leaked) fail("Secret redaction", "an API key survived redaction in the serialized config");
   else ok("Secret redaction", "no secrets present in redacted config");
 
-  // Provider reachability: a key wired, or local provider configured.
   const withKey = config.providers.filter((p) => p.apiKey);
-  const local = config.providers.find((p) => p.provider === "local");
-  if (withKey.length > 0) ok("Provider credentials", `${withKey.length} provider(s) have a key wired`);
-  else if (local) warn("Provider credentials", "no API keys; only local provider configured (ensure it is running)");
-  else warn("Provider credentials", "no provider key wired — set e.g. ANTHROPIC_API_KEY before running a real mission");
+  const activeDef = active ? getProviderDef(active.provider) : undefined;
+
+  if (activeDef?.kind === "cli") {
+    const found = Bun.which(activeDef.cliBinary ?? active.provider);
+    if (found) ok(`CLI: ${activeDef.cliBinary}`, found);
+    else warn(`CLI: ${activeDef.cliBinary}`, `not on PATH — install or set HARNESS_PROVIDER=anthropic`);
+  } else if (active?.provider === "ollama") {
+    warn("Provider credentials", "ollama active — no API key required; ensure Ollama is running");
+  } else if (withKey.length > 0) {
+    ok("Provider credentials", `${withKey.length} provider(s) have a key wired`);
+  } else {
+    warn(
+      "Provider credentials",
+      "no provider key wired — set ANTHROPIC_API_KEY (default) or HARNESS_PROVIDER=ollama",
+    );
+  }
 } catch (err) {
   fail("Config loads", err.message);
 }
 
-// PATH tools
 for (const tool of ["git"]) {
   const found = Bun.which(tool);
   if (found) ok(`PATH: ${tool}`, found);
   else warn(`PATH: ${tool}`, "not found on PATH");
 }
 
-// Render
 const icon = { ok: "✅", warn: "⚠️ ", fail: "❌" };
 for (const c of checks) {
   console.log(`${icon[c.level]} ${c.name}: ${c.detail}`);

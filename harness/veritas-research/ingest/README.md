@@ -10,10 +10,10 @@ Compile research intent from `NEW.md` into a harness-ready `research-plan.json`.
    # edit ingest/NEW.md
    ```
 
-2. Run ingest (from harness directory):
+2. Run ingest:
    ```bash
    cd harness/veritas-research
-   bun run ingest --input ../../ingest/NEW.md
+   bun run ingest --input ingest/NEW.md
    ```
 
 3. Start a mission from the plan:
@@ -25,15 +25,15 @@ Compile research intent from `NEW.md` into a harness-ready `research-plan.json`.
 
 | File | Purpose |
 |------|---------|
-| `NEW.md` | Operator research brief (gitignored) |
-| `TEMP.md` | Template spec for LLM fitter |
-| `examples/*.NEW.md` | Committed example briefs |
-| `src/schema.ts` | Zod schema (shared with harness) |
+| `ingest/NEW.md` | Operator research brief (gitignored) |
+| `ingest/TEMP.md` | Template spec for LLM fitter |
+| `ingest/examples/*.NEW.md` | Committed example briefs |
+| `src/ingest/schema.ts` | Zod schema (shared with harness) |
 
-Output lands in `harness/veritas-research/missions/<slug>/research-plan.json`.
+Output lands in `missions/<slug>/research-plan.json`.
 
 ## Tests
 
 ```bash
-cd ingest && bun test
+bun test src/ingest/
 ```

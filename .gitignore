@@ -5,8 +5,10 @@ node_modules/
 dist/
 *.log
 agents/docs/downloads/
-ingest/NEW.md
+harness/veritas-research/ingest/NEW.md
+harness/veritas-research/src/config/local.json
 harness/veritas-research/missions/*
 !harness/veritas-research/missions/.gitkeep
 !harness/veritas-research/missions/example-slug/
 !harness/veritas-research/missions/example-slug/**
+*/blog/ 

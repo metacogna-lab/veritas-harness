@@ -2,8 +2,9 @@
  * LLM-primary fitter — maps ParsedIntent + TEMP.md + catalog to ResearchPlan JSON.
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import type { LLMBackbone } from "../../harness/veritas-research/src/llm/index.ts";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { LLMBackbone } from "../llm/index.ts";
 import type { ParsedIntent } from "./parse-intent.ts";
 import { catalogSummary, type ResourcesCatalog } from "./resources-catalog.ts";
 import { INGEST_VERSION } from "./schema.ts";
@@ -19,7 +20,7 @@ export interface FitIntentOptions {
   now?: () => string;
 }
 
-const DEFAULT_TEMP = join(import.meta.dir, "../TEMP.md");
+const DEFAULT_TEMP = join(dirname(fileURLToPath(import.meta.url)), "../../ingest/TEMP.md");
 
 /** Build the system + user prompt for the fitter LLM. */
 export function buildFitterPrompt(

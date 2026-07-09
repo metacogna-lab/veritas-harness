@@ -1,6 +1,18 @@
 import { describe, expect, test } from "bun:test";
+import { join } from "node:path";
 import { redact } from "./redact.ts";
-import { loadConfig, providerConfig, isProvider, redactedConfig } from "./index.ts";
+import {
+  loadConfig,
+  providerConfig,
+  providerChain,
+  isProvider,
+  redactedConfig,
+  configDirectory,
+  normalizeProvider,
+} from "./index.ts";
+
+const FIXTURE_DEFAULT = join(configDirectory(), "default.json");
+const FIXTURE_LOCAL_EXAMPLE = join(configDirectory(), "local.example.json");
 
 describe("redact", () => {
   test("masks secret-named keys", () => {
@@ -56,16 +68,16 @@ describe("redact", () => {
 });
 
 describe("loadConfig", () => {
-  test("defaults to anthropic with no env or file", () => {
-    const cfg = loadConfig({ configPath: "/nonexistent/harness.json", env: {} });
+  test("defaults to anthropic from committed default.json", () => {
+    const cfg = loadConfig({ configPath: FIXTURE_DEFAULT, env: {} });
     expect(cfg.defaultProvider).toBe("anthropic");
-    expect(cfg.providers).toHaveLength(1);
     expect(cfg.providers[0]!.provider).toBe("anthropic");
+    expect(cfg.providers[0]!.model).toBe("claude-sonnet-5");
   });
 
   test("resolves api key from the provider's env var", () => {
     const cfg = loadConfig({
-      configPath: "/nonexistent/harness.json",
+      configPath: FIXTURE_DEFAULT,
       env: { ANTHROPIC_API_KEY: "sk-ant-fromenv1234567890" },
     });
     expect(cfg.providers[0]!.apiKey).toBe("sk-ant-fromenv1234567890");
@@ -73,36 +85,76 @@ describe("loadConfig", () => {
 
   test("HARNESS_PROVIDER env overrides the default provider", () => {
     const cfg = loadConfig({
-      configPath: "/nonexistent/harness.json",
+      configPath: FIXTURE_DEFAULT,
       env: { HARNESS_PROVIDER: "openai", OPENAI_API_KEY: "sk-openaikey1234567890" },
     });
     expect(cfg.defaultProvider).toBe("openai");
+    expect(cfg.providers[0]!.provider).toBe("openai");
     expect(cfg.providers[0]!.apiKey).toBe("sk-openaikey1234567890");
   });
 
+  test("HARNESS_MODEL env overrides model for active provider", () => {
+    const cfg = loadConfig({
+      configPath: FIXTURE_DEFAULT,
+      env: { HARNESS_MODEL: "claude-opus-4-8" },
+    });
+    expect(cfg.providers[0]!.model).toBe("claude-opus-4-8");
+  });
+
+  test("HARNESS_PROVIDER=local maps to ollama", () => {
+    const cfg = loadConfig({
+      configPath: FIXTURE_DEFAULT,
+      env: { HARNESS_PROVIDER: "local" },
+    });
+    expect(cfg.defaultProvider).toBe("ollama");
+    expect(cfg.providers[0]!.provider).toBe("ollama");
+  });
+
+  test("loads multi-provider example config", () => {
+    const cfg = loadConfig({ configPath: FIXTURE_LOCAL_EXAMPLE, env: {} });
+    expect(cfg.providers.length).toBeGreaterThan(1);
+    expect(cfg.providers.some((p) => p.provider === "ollama")).toBe(true);
+    expect(cfg.providers.some((p) => p.provider === "claude-code")).toBe(true);
+    expect(cfg.providers.some((p) => p.provider === "codex")).toBe(true);
+  });
+
   test("does not hardcode any key when env is empty", () => {
-    const cfg = loadConfig({ configPath: "/nonexistent/harness.json", env: {} });
+    const cfg = loadConfig({ configPath: FIXTURE_DEFAULT, env: {} });
     expect(cfg.providers[0]!.apiKey).toBeUndefined();
   });
 
   test("redactedConfig masks the resolved api key", () => {
     const cfg = loadConfig({
-      configPath: "/nonexistent/harness.json",
+      configPath: FIXTURE_DEFAULT,
       env: { ANTHROPIC_API_KEY: "sk-ant-fromenv1234567890" },
     });
     const safe = redactedConfig(cfg);
     expect(safe.providers[0]!.apiKey).toBe("***REDACTED***");
   });
+
+  test("providerChain puts default provider first", () => {
+    const cfg = loadConfig({ configPath: FIXTURE_LOCAL_EXAMPLE, env: {} });
+    const chain = providerChain(cfg);
+    expect(chain[0]!.provider).toBe(cfg.defaultProvider);
+  });
 });
 
 describe("providerConfig / isProvider", () => {
-  test("isProvider validates known providers", () => {
+  test("isProvider validates known providers and legacy local alias", () => {
     expect(isProvider("anthropic")).toBe(true);
+    expect(isProvider("ollama")).toBe(true);
+    expect(isProvider("local")).toBe(true);
+    expect(isProvider("claude-code")).toBe(true);
+    expect(isProvider("codex")).toBe(true);
     expect(isProvider("nope")).toBe(false);
   });
 
+  test("normalizeProvider maps local to ollama", () => {
+    expect(normalizeProvider("local")).toBe("ollama");
+  });
+
   test("providerConfig returns the default provider's config", () => {
-    const cfg = loadConfig({ configPath: "/nonexistent/harness.json", env: {} });
+    const cfg = loadConfig({ configPath: FIXTURE_DEFAULT, env: {} });
     expect(providerConfig(cfg)?.provider).toBe("anthropic");
   });
 });

@@ -4,8 +4,10 @@ import { join } from "node:path";
 
 describe("resources-catalog", () => {
   test("finds lessons.json and resource modules", () => {
-    const repoRoot = join(import.meta.dir, "../..");
+    const harnessRoot = join(import.meta.dir, "../..");
+    const repoRoot = join(import.meta.dir, "../../../..");
     const catalog = buildResourcesCatalog({
+      harnessRoot,
       repoRoot,
       objective: "scope gate benchmark safety",
       extraSources: ["agents/docs/processed/strategy.md"],
@@ -13,6 +15,7 @@ describe("resources-catalog", () => {
     expect(catalog.resourceModules).toContain("lessons.ts");
     const lessonSrc = catalog.sources.find((s) => s.kind === "lesson");
     expect(lessonSrc?.exists).toBe(true);
+    expect(lessonSrc?.path).toBe("resources/lessons.json");
     const docSrc = catalog.sources.find((s) => s.path.includes("strategy.md"));
     expect(docSrc?.exists).toBe(true);
   });

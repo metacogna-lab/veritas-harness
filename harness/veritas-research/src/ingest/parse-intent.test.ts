@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseIntentFile, parseSections, parseSimpleYaml } from "./parse-intent.ts";
 
-const EXAMPLE = join(import.meta.dir, "../examples/scope-gate-study.NEW.md");
+const EXAMPLE = join(import.meta.dir, "../../ingest/examples/scope-gate-study.NEW.md");
 
 describe("parse-intent", () => {
   test("parses example NEW.md frontmatter and sections", () => {

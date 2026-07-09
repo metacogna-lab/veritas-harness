@@ -8,21 +8,20 @@
 
 Implemented the full ingest add-on:
 
-- `ingest/` package with sanitize, parse, catalog, LLM fitter, Zod validation
+- `src/ingest/` pipeline with sanitize, parse, catalog, LLM fitter, Zod validation
 - Golden fixture at `harness/veritas-research/missions/example-slug/research-plan.json`
 - `research` loadout + `veritas start --plan` consumption path
 
 ## Verification
 
 ```bash
-cd ingest && bun test
-cd ../harness/veritas-research && bun test
-cd harness/veritas-research && bun run doctor
+cd harness/veritas-research && bun test
+bun run doctor
 ```
 
-Results: all tests green (ingest: 16 pass; harness: 159 pass).
+Results: all tests green in single harness package.
 
-Mock-LLM integration test (`ingest/src/ingest.test.ts`) validates end-to-end fit without API keys.
+Mock-LLM integration test (`src/ingest/ingest.test.ts`) validates end-to-end fit without API keys.
 
 ## Consumption smoke
 

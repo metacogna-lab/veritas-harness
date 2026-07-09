@@ -81,7 +81,7 @@ for the full provider table (`anthropic`, `claude-code`, `codex`, `ollama`, `ope
 
 ```bash
 HARNESS_PROVIDER=ollama HARNESS_MODEL=qwen3-coder:latest bun run dev start "smoke test" --target .
-HARNESS_PROVIDER=claude-code bun run ingest --input ../../ingest/NEW.md
+HARNESS_PROVIDER=claude-code bun run ingest --input ingest/NEW.md
 ```
 
 Environment variables are documented in the config README. Secrets are resolved from the
@@ -155,7 +155,7 @@ Mission artifacts land under `.veritas/runs/` (override with `VERITAS_RUNS_DIR`)
 Compile a brief, then start from the plan:
 
 ```bash
-bun run ingest --input ../../ingest/NEW.md
+bun run ingest --input ingest/NEW.md
 bun run dev start --plan missions/<slug>/research-plan.json
 ```
 

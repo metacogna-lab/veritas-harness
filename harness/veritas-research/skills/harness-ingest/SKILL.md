@@ -1,21 +1,25 @@
-# Ingest research intent into a harness-ready plan
+---
+name: harness-ingest
+description: >-
+  Compile research intent from NEW.md into a validated research-plan.json. Use when the user asks
+  to "ingest research", "create research plan", "compile NEW.md", or run ingest.
+---
 
-Triggers: "ingest research", "create research plan", "compile NEW.md", "run ingest".
+# Ingest research intent into a harness-ready plan
 
 ## Steps
 
-1. Read `ingest/TEMP.md` for the required `research-plan.json` schema.
-2. Read the operator's `ingest/NEW.md` (or `ingest/examples/*.NEW.md` for reference).
-3. Run the ingest pipeline:
+1. Read `harness/veritas-research/ingest/TEMP.md` for the required `research-plan.json` schema.
+2. Read the operator's `harness/veritas-research/ingest/NEW.md` (or `ingest/examples/*.NEW.md`).
+3. Run the ingest pipeline from `harness/veritas-research/`:
    ```bash
-   cd harness/veritas-research
-   bun run ingest --input ../../ingest/NEW.md
+   bun run ingest --input ingest/NEW.md
    ```
    Or via CLI:
    ```bash
-   bun run dev ingest --input ../../ingest/NEW.md
+   bun run dev ingest --input ingest/NEW.md
    ```
-4. Confirm output at `harness/veritas-research/missions/<slug>/research-plan.json`.
+4. Confirm output at `missions/<slug>/research-plan.json`.
 5. Validate the plan loads:
    ```bash
    bun test src/resources/research-plan.test.ts
@@ -34,5 +38,5 @@ Triggers: "ingest research", "create research plan", "compile NEW.md", "run inge
 ## Hard gate
 
 Do not mark done until:
-- `bun test` is green in both `ingest/` and `harness/veritas-research/`
+- `bun test` is green in `harness/veritas-research/`
 - `research-plan.json` passes Zod validation via `loadResearchPlan()`

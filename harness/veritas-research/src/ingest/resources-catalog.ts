@@ -2,8 +2,9 @@
  * Catalog harness resources available during ingest (lessons store, resource modules).
  */
 import { existsSync, readdirSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { LessonsStore } from "../../harness/veritas-research/src/resources/lessons.ts";
+import { join, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { LessonsStore } from "../resources/lessons.ts";
 
 export interface CatalogSource {
   kind: "lesson" | "doc" | "resource" | "download";
@@ -23,19 +24,27 @@ export interface ResourcesCatalog {
 
 const RESOURCE_MODULE_NAMES = ["lessons.ts", "research-plan.ts"];
 
-/** Resolve repo root from ingest package location. */
+const INGEST_DIR = dirname(fileURLToPath(import.meta.url));
+
+/** Resolve veritas repo root (parent of harness/). */
 export function defaultRepoRoot(): string {
-  return resolve(import.meta.dir, "../..");
+  return resolve(INGEST_DIR, "../../../..");
+}
+
+/** Resolve harness package root from src/ingest. */
+export function defaultHarnessRoot(): string {
+  return resolve(INGEST_DIR, "../..");
 }
 
 /** Build a catalog of harness resources and optional NEW.md source paths. */
 export function buildResourcesCatalog(opts: {
   repoRoot?: string;
+  harnessRoot?: string;
   objective: string;
   extraSources?: string[];
 }): ResourcesCatalog {
+  const harnessRoot = opts.harnessRoot ?? defaultHarnessRoot();
   const repoRoot = opts.repoRoot ?? defaultRepoRoot();
-  const harnessRoot = join(repoRoot, "harness/veritas-research");
   const resourcesDir = join(harnessRoot, "src/resources");
   const lessonsPath = join(harnessRoot, "resources/lessons.json");
 
@@ -47,7 +56,7 @@ export function buildResourcesCatalog(opts: {
 
   sources.push({
     kind: "lesson",
-    path: "harness/veritas-research/resources/lessons.json",
+    path: "resources/lessons.json",
     exists: existsSync(lessonsPath),
     summary: "Committed lessons store from completed missions",
   });
@@ -55,7 +64,7 @@ export function buildResourcesCatalog(opts: {
   for (const mod of resourceModules) {
     sources.push({
       kind: "resource",
-      path: `harness/veritas-research/src/resources/${mod}`,
+      path: `src/resources/${mod}`,
       exists: true,
       summary: `Harness resource module: ${mod}`,
     });

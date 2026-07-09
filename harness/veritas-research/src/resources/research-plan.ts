@@ -2,7 +2,7 @@
  * Load and validate research-plan.json; bridge to control-plane StartOptions.
  */
 import { readFileSync } from "node:fs";
-import { researchPlanSchema, type ResearchPlan } from "../../../../ingest/src/schema.ts";
+import { researchPlanSchema, type ResearchPlan } from "../ingest/schema.ts";
 import type { MissionScope } from "../safety/scope.ts";
 export type { ResearchPlan };
 

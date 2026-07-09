@@ -1,7 +1,7 @@
 /**
  * Validate LLM output against ResearchPlan schema with Zod.
  */
-import { parseLastObject } from "../../harness/veritas-research/src/parse/json.ts";
+import { parseLastObject } from "../parse/json.ts";
 import { researchPlanSchema, type ResearchPlan } from "./schema.ts";
 import type { ZodError } from "zod";
 

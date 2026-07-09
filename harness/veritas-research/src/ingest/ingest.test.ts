@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { LLMBackbone } from "../../harness/veritas-research/src/llm/index.ts";
-import type { ProviderConfig } from "../../harness/veritas-research/src/config/index.ts";
-import type { TransportResponse } from "../../harness/veritas-research/src/llm/types.ts";
+import { LLMBackbone } from "../llm/index.ts";
+import type { ProviderConfig } from "../config/index.ts";
+import type { TransportResponse } from "../llm/types.ts";
 import { parseIntentFile } from "./parse-intent.ts";
 import { buildResourcesCatalog } from "./resources-catalog.ts";
 import { fitIntent } from "./fit-intent.ts";
@@ -36,7 +36,7 @@ const GOLDEN_PLAN = {
   ],
   phases: [{ id: "p1", description: "Run scope-gate bench black-box mode and capture results" }],
   sources: [
-    { kind: "lesson", path: "harness/veritas-research/resources/lessons.json" },
+    { kind: "lesson", path: "resources/lessons.json" },
     { kind: "doc", path: "agents/docs/processed/strategy.md" },
   ],
   lessons: [],
@@ -58,10 +58,11 @@ function mockLLM(): LLMBackbone {
 
 describe("ingest integration (mock LLM)", () => {
   test("fitIntent produces valid plan from example NEW.md", async () => {
-    const example = join(import.meta.dir, "../examples/scope-gate-study.NEW.md");
+    const example = join(import.meta.dir, "../../ingest/examples/scope-gate-study.NEW.md");
+    const harnessRoot = join(import.meta.dir, "../..");
     const intent = parseIntentFile(readFileSync(example, "utf8"));
     const catalog = buildResourcesCatalog({
-      repoRoot: join(import.meta.dir, "../.."),
+      harnessRoot,
       objective: intent.frontmatter.title,
       extraSources: intent.frontmatter.sources,
     });
@@ -78,7 +79,7 @@ describe("ingest integration (mock LLM)", () => {
   });
 
   test("runIngest dry-run does not write files", async () => {
-    const example = join(import.meta.dir, "../examples/scope-gate-study.NEW.md");
+    const example = join(import.meta.dir, "../../ingest/examples/scope-gate-study.NEW.md");
     const { plan, outputPath } = await runIngest({
       inputPath: example,
       llm: mockLLM(),

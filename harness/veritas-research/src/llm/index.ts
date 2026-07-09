@@ -36,8 +36,9 @@ export interface LLMBackboneOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
-const defaultNative = (cfg: ProviderConfig): boolean =>
-  cfg.provider === "anthropic" || cfg.provider === "openai" || cfg.provider === "openrouter";
+import { getProviderDef } from "../config/providers.ts";
+
+const defaultNative = (cfg: ProviderConfig): boolean => getProviderDef(cfg.provider).nativeToolCalling;
 
 const realSleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
 

@@ -13,12 +13,13 @@
  * unattended here, so anything above `active` fails safe unless explicitly
  * pre-authorized with --pre-auth (invariant #2).
  */
-import { loadConfig, providerConfig } from "./config/index.ts";
+import { loadConfig, providerChain } from "./config/index.ts";
 import { LLMBackbone } from "./llm/index.ts";
 import { ControlPlane } from "./control/plane.ts";
 import { MissionStore } from "./control/store.ts";
 import { defaultLoadouts } from "./agent/loadouts.ts";
 import { loadResearchPlan } from "./resources/research-plan.ts";
+import { runIngest } from "./ingest/ingest.ts";
 
 const RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 
@@ -45,9 +46,9 @@ function parseFlags(args: string[]): { positionals: string[]; flags: Record<stri
 
 function buildLLM(): LLMBackbone {
   const config = loadConfig();
-  const primary = providerConfig(config);
-  if (!primary) throw new Error("no provider configured");
-  return new LLMBackbone({ configs: config.providers.length > 0 ? config.providers : [primary] });
+  const chain = providerChain(config);
+  if (chain.length === 0) throw new Error("no provider configured");
+  return new LLMBackbone({ configs: chain });
 }
 
 function print(line: string): void {
@@ -92,16 +93,25 @@ async function main(): Promise<number> {
   if (verb === "ingest") {
     const { flags } = parseFlags(rest);
     const input = flags.input;
-    if (!input) return usage("ingest --input <NEW.md> [--slug <slug>]");
-    const { spawnSync } = await import("node:child_process");
-    const { fileURLToPath } = await import("node:url");
-    const { dirname, join: pathJoin } = await import("node:path");
-    const repoRoot = pathJoin(dirname(fileURLToPath(import.meta.url)), "../../..");
-    const script = pathJoin(repoRoot, "ingest/scripts/ingest.mjs");
-    const args = [script, "--input", input];
-    if (flags.slug) args.push("--slug", flags.slug);
-    const r = spawnSync("bun", args, { stdio: "inherit", cwd: repoRoot });
-    return r.status ?? 1;
+    if (!input) return usage("ingest --input <NEW.md> [--slug <slug>] [--dry-run]");
+    try {
+      const { plan, outputPath } = await runIngest({
+        inputPath: input,
+        slug: flags.slug,
+        dryRun: flags["dry-run"] === "true",
+      });
+      if (flags["dry-run"] === "true") {
+        print(JSON.stringify(plan, null, 2));
+      } else {
+        print(`ingest: wrote ${outputPath}`);
+        print(`  objective: ${plan.objective}`);
+        print(`  loadout: ${plan.loadout}`);
+      }
+      return 0;
+    } catch (err) {
+      process.stderr.write(`ingest: ${(err as Error).message}\n`);
+      return 1;
+    }
   }
 
   if (verb === "start") {

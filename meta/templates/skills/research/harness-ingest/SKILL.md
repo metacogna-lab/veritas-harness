@@ -11,22 +11,22 @@ description: >-
 ## Prerequisites
 
 ```bash
-cd harness/veritas-research
+cd harness/<harness>
 bun run doctor
 bun test
 ```
 
-If a provider isn't configured yet, use **harness-config** or **harness-provider**
+If a provider isn't configured yet, use **harness-veritas-config** or **harness-provider**
 first.
 
 ## Steps
 
-1. Read `harness/veritas-research/ingest/TEMP.md` for the required `research-plan.json` schema.
-2. Read the operator's `harness/veritas-research/ingest/NEW.md` (or a path from `$ARGUMENTS`).
+1. Read `harness/<harness>/ingest/TEMP.md` for the required `research-plan.json` schema.
+2. Read the operator's `harness/<harness>/ingest/NEW.md` (or a path from `$ARGUMENTS`).
    If the file doesn't exist yet, have the user create it following the `TEMP.md` template.
 3. Run the ingest pipeline:
    ```bash
-   cd harness/veritas-research
+   cd harness/<harness>
    bun run ingest --input ingest/NEW.md
    ```
    Or with a custom path:
@@ -52,7 +52,7 @@ first.
 
 ## Composing with other skills
 
-- Use **harness-provider** / **harness-config** if the LLM fitter fails due to a missing
+- Use **harness-provider** / **harness-veritas-config** if the LLM fitter fails due to a missing
   or misconfigured provider.
 - After a mission completes, use **harness-refuter** to verify any findings produced.
 - Use **harness-analysis** to roll up mission results across all harnesses into a research report.
@@ -67,5 +67,5 @@ first.
 ## Hard gate
 
 Do not mark done until:
-- `bun test` is green in `harness/veritas-research/`
+- `bun test` is green in `harness/<harness>/`
 - `research-plan.json` passes Zod validation via `loadResearchPlan()`

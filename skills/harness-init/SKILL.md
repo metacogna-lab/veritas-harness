@@ -29,7 +29,7 @@ If Bun is missing: `curl -fsSL https://bun.sh/install | bash`
 
 ```bash
 git clone <repo-url> veritas
-cd veritas/harness/veritas-research
+cd veritas/harness/<harness>
 ```
 
 ### 3. Install dependencies
@@ -40,7 +40,7 @@ bun install
 
 ### 4. Configure a provider
 
-Use **harness-provider** to browse available providers, then **harness-veritas-config** to
+Use **harness-provider** to browse available providers, then **harness-config** to
 persist the choice:
 
 ```bash
@@ -95,7 +95,7 @@ bun run dev start --plan missions/<slug>/research-plan.json
 ## Composing with other skills
 
 - Use **harness-provider** to understand available LLM backends before step 4.
-- Use **harness-veritas-config** to persist provider config (step 4 interactive path).
+- Use **harness-config** to persist provider config (step 4 interactive path).
 - Use **harness-ingest** to compile a research brief into a mission plan (step 8).
 - Use **harness-eval-runner** after the first mission to add a benchmark suite.
 

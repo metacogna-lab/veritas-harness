@@ -16,7 +16,7 @@ Add a capability to the harness by registering a typed tool — never by forking
 Run the healthcheck first to confirm the harness is in a working state:
 
 ```bash
-cd harness/veritas-research
+cd harness/<harness>
 bun run doctor
 bun test
 ```
@@ -25,11 +25,11 @@ Fix any failures before adding a new tool.
 
 ## Steps
 
-1. Read `harness/veritas-research/src/tools/registry.ts` for the `Tool` interface, `RiskTier`,
+1. Read `harness/<harness>/src/tools/registry.ts` for the `Tool` interface, `RiskTier`,
    and `execute()` flow (validate → safety check → run).
-2. Read existing tools in `harness/veritas-research/src/tools/` (`read-file.ts`, `http-get.ts`,
+2. Read existing tools in `harness/<harness>/src/tools/` (`read-file.ts`, `http-get.ts`,
    etc.) for naming conventions and pattern to follow.
-3. Create `harness/veritas-research/src/tools/<name>.ts`:
+3. Create `harness/<harness>/src/tools/<name>.ts`:
    - `name`, `description`, zod `inputSchema`
    - Conservative `riskTier`: side-effecting read-only I/O is at least `active`; `intrusive` /
      `credential` / `dangerous` MUST use tiers that force the approval gate
@@ -37,12 +37,12 @@ Fix any failures before adding a new tool.
    - `requiresHumanRelease: true` + `terminalActionKind` for publish/send/delete/deploy/disclose
 4. If the tool touches network/fs/shell, confirm `src/safety/scope.ts` `checkScope` covers
    the target kinds; add a scope test case if a new pattern appears.
-5. Register the tool in `harness/veritas-research/src/tools/index.ts` (or a loadout-specific
+5. Register the tool in `harness/<harness>/src/tools/index.ts` (or a loadout-specific
    subset if domain-only).
-6. Write `harness/veritas-research/src/tools/<name>.test.ts`:
+6. Write `harness/<harness>/src/tools/<name>.test.ts`:
    - Happy path execution
    - At least one scope-denied path (off-scope target → `SCOPE DENIED`, no side effect)
-7. Run from `harness/veritas-research/`:
+7. Run from `harness/<harness>/`:
    ```bash
    bun test src/tools/<name>.test.ts
    bun test
@@ -52,7 +52,7 @@ Fix any failures before adding a new tool.
 
 - After adding a tool, use **harness-eval-runner** to add a benchmark suite that exercises it.
 - If the tool produces findings, use **harness-refuter** to verify them before reporting.
-- Use **harness-veritas-config** if the tool requires a new provider or config key.
+- Use **harness-config** if the tool requires a new provider or config key.
 
 ## Hard rules
 

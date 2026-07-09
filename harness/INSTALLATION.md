@@ -181,9 +181,27 @@ Operator docs for agents working in this repo: [`../CLAUDE.md`](../CLAUDE.md).
 
 ## Adding another harness type
 
-New capability domains belong under `harness/<name>/` as a sibling package:
+New capability domains belong under `harness/<name>/` as a sibling package. **Do not
+hand-create the folder** — the meta-harness root owns an ordered pipeline that
+scaffolds it and keeps the registry, manifest, and 1-based index consistent
+(invariant #4). From the repo root:
 
-1. Copy the layout contract from `veritas-research/` (`src/`, `scripts/`, `package.json`, `bun test`).
-2. Register loadouts in `src/agent/loadouts.ts` — compose against the same loop, do not fork it.
-3. Document harness-specific provider or scope needs in that package's README.
+```bash
+bun run create-harness <name> --capabilities <a,b>   # e.g. --capabilities research
+bun run list-harnesses                               # confirm it registered
+bun run harness-doctor                               # meta layer healthy
+```
+
+The pipeline progresses in order: validate → scaffold the 8-plane template →
+install capability-pack skills into `harness/<name>/skills/` → write `harness.json`
+→ register in `harnesses.json` → `bun install` → `bun test`. Then:
+
+1. Wire a real provider behind `LLMBackbone` and register the first tool (the
+   installed **harness-first-tool** skill walks through this).
+2. Add loadouts by composing against the same loop — never fork it (invariant #8).
+3. Document harness-specific provider/scope needs in that package's `README.md`.
 4. Add a row to the table at the top of this file.
+
+Generic operating skills (init, provider, config, tool-adder, refuter, eval-runner)
+live at the meta root under `skills/` and operate any harness; harness-specific
+skills are the ones the pipeline installs into `harness/<name>/skills/`.

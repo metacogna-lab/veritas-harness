@@ -14,7 +14,8 @@
     "bench": "bun scripts/bench.mjs",
     "lessons": "bun scripts/lessons.mjs",
     "ingest": "tsx src/cli.ts ingest",
-    "veritas-config": "bun scripts/veritas-config.mjs"
+    "veritas-config": "bun scripts/veritas-config.mjs",
+    "analyze": "bun scripts/analyze.mjs"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4",

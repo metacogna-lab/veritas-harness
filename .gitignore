@@ -12,3 +12,4 @@ harness/veritas-research/missions/*
 !harness/veritas-research/missions/example-slug/
 !harness/veritas-research/missions/example-slug/**
 blog/
+analysis/research-analysis-*.md

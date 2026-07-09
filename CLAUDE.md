@@ -40,8 +40,11 @@ bun run verify-finding         # scripts/verify-finding.mjs — run the refuter 
 bun run bench                  # scripts/bench.mjs — run committed-oracle benchmark suites
 bun run lessons                # scripts/lessons.mjs — record/retrieve mission lessons
 bun run ingest --input ingest/NEW.md   # compile research brief → research-plan.json
-bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan
+bun run dev eval --plan missions/<slug>/research-plan.json    # run dogma gate only (no mission)
+bun run dev digest --plan missions/<slug>/research-plan.json  # digest sources → resources/summary/<slug>/
+bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan (eval + digest + run)
 bun run veritas-config             # interactive local.json wizard (terminal)
+bun run analyze                    # generate analysis/research-analysis-{datetime}.md
 ```
 
 Slash commands: `/ingest`, `/provider`, `/veritas-config` (see `skills/` and `.claude/commands/`).

@@ -34,11 +34,18 @@ first.
    bun run ingest --input $ARGUMENTS
    ```
 4. Confirm output at `missions/<slug>/research-plan.json`.
-5. Validate the plan loads:
+5. Validate the plan loads and passes the dogma gate:
    ```bash
-   bun test src/resources/research-plan.test.ts
+   bun run dev eval --plan missions/<slug>/research-plan.json
    ```
-6. Start a mission from the plan (optional smoke test):
+   If the eval fails, fix the research brief in NEW.md and re-run ingest. Required dimensions
+   (falsifiable question, bounded scope, phased approach ≥ 2, measurable success, honest
+   decomposition) must all pass before execution is allowed.
+6. Digest sources into `resources/summary/<slug>/` (optional preview before running):
+   ```bash
+   bun run dev digest --plan missions/<slug>/research-plan.json
+   ```
+7. Start a mission from the plan (eval + digest happen automatically):
    ```bash
    bun run dev start --plan missions/<slug>/research-plan.json --max-steps 3
    ```

@@ -12,3 +12,6 @@ logs
 
 # veritas mission run store (runtime artifacts, not source)
 .veritas/
+
+# generated source summaries (produced by bun run digest / bun run dev digest)
+resources/summary/

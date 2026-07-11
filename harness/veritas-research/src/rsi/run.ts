@@ -13,6 +13,8 @@ import { buildProposalContext, proposeEdit, type Proposer } from "./proposal.ts"
 import { validateProposal, type RunTests } from "./validation.ts";
 import { applyProposal, type ApplyOutcome } from "./apply.ts";
 import type { HumanReleasePolicy, HumanReleaseSession } from "../safety/human-release.ts";
+import type { LessonsStore } from "../resources/lessons.ts";
+import { formatPlanningAdvisory } from "../resources/lessons.ts";
 
 export interface RsiRunInput {
   /**
@@ -45,6 +47,12 @@ export interface RsiRunInput {
   session?: HumanReleaseSession;
   /** How many top patterns to attempt this pass. Default 3. */
   maxPatterns?: number;
+  /**
+   * Optional lessons store. When provided, prior lessons for each target surface
+   * are surfaced as read-only advisory context to the proposer, and outcomes are
+   * fed back via markLessonOutcome after validation.
+   */
+  lessonsStore?: LessonsStore;
 }
 
 export interface RsiRunResult {
@@ -75,10 +83,22 @@ export async function runRsi(input: RsiRunInput): Promise<RsiRunResult> {
   const outcomes: ApplyOutcome[] = [];
 
   for (const pattern of top) {
+    // Determine the target surface from the first editable surface (used for lesson lookup).
+    const targetSurface = input.editableSurfaces[0]?.path ?? "";
+
+    // Fetch prior lesson advisory for this surface (read-only; proposer considers, never mandated).
+    let priorLessonContext: string | undefined;
+    if (input.lessonsStore) {
+      const lessons = input.lessonsStore.getLessonsByHarnessSurface(targetSurface);
+      const advisory = formatPlanningAdvisory(lessons);
+      if (advisory) priorLessonContext = advisory;
+    }
+
     const ctx = buildProposalContext({
       pattern,
       editableSurfaces: input.editableSurfaces,
       behaviorsToPreserve: input.behaviorsToPreserve,
+      priorLessonContext,
     });
     let proposal;
     try {
@@ -88,14 +108,26 @@ export async function runRsi(input: RsiRunInput): Promise<RsiRunResult> {
       continue;
     }
     const validation = await validateProposal(proposal.id, input.suite, input.runTests);
-    const outcome = await applyProposal({
+
+    // Feed outcome back into the lessons store so we can track which lessons help vs. harm.
+    if (input.lessonsStore) {
+      const lessonIds = input.lessonsStore
+        .getLessonsByHarnessSurface(targetSurface)
+        .map((l) => l.id);
+      const outcome = validation.eligible ? "helpful" : "harmful";
+      for (const lessonId of lessonIds) {
+        input.lessonsStore.markLessonOutcome(lessonId, outcome);
+      }
+    }
+
+    const applyResult = await applyProposal({
       proposal,
       validation,
       pattern,
       policy: input.policy,
       session: input.session,
     });
-    outcomes.push(outcome);
+    outcomes.push(applyResult);
   }
 
   // Write failure-clusters.md into each mission's experience dir (even on dry-run).

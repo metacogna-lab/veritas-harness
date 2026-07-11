@@ -17,6 +17,8 @@ export function buildProposalContext(input: {
   editableSurfaces: EditableSurface[];
   behaviorsToPreserve: string[];
   pastAttempts?: HarnessEditProposal[];
+  /** Read-only advisory from the lessons delta store; wired in by the RSI orchestrator. */
+  priorLessonContext?: string;
 }): ProposalContext {
   const { pattern, editableSurfaces } = input;
   const honestTaskDescription =
@@ -30,6 +32,7 @@ export function buildProposalContext(input: {
     behaviorsToPreserve: input.behaviorsToPreserve,
     pastAttempts: input.pastAttempts ?? [],
     honestTaskDescription,
+    priorLessonContext: input.priorLessonContext,
   };
 }
 

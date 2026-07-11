@@ -31,6 +31,14 @@ export interface Lesson {
   /** Prompt/tool gaps noticed. */
   gaps: string[];
   recordedAt: string;
+  /** Harness module or file this lesson is most relevant to (e.g. "scope.ts", "tools/"). */
+  harnessSurface: string;
+  /** Times an RSI proposal informed by this lesson was accepted (validation eligible). */
+  helpfulnessCount: number;
+  /** Times an RSI proposal informed by this lesson was rejected. */
+  harmfulnessCount: number;
+  /** Active by default; auto-deprecated when harmfulnessCount > helpfulnessCount * 2. */
+  status: "active" | "deprecated";
 }
 
 export interface LessonInput {
@@ -39,6 +47,8 @@ export interface LessonInput {
   worked?: string[];
   failed?: string[];
   gaps?: string[];
+  /** Which harness module or file this lesson is most relevant to. */
+  harnessSurface?: string;
 }
 
 /** Opt-in controls for surfacing lessons into planning. Disabled unless `enabled: true`. */
@@ -104,6 +114,30 @@ export function lessonFromSnapshot(snapshot: MissionSnapshot, now = (): string =
     failed,
     gaps,
     recordedAt: now(),
+    harnessSurface: "",
+    helpfulnessCount: 0,
+    harmfulnessCount: 0,
+    status: "active" as const,
+  };
+}
+
+/**
+ * Normalize a lesson loaded from disk, filling in fields added after initial release.
+ * This ensures old lessons.json files without harnessSurface/counts/status still load.
+ */
+export function normalizeLesson(raw: Partial<Lesson>): Lesson {
+  return {
+    id: raw.id ?? "",
+    missionId: raw.missionId ?? "",
+    objective: raw.objective ?? "",
+    worked: raw.worked ?? [],
+    failed: raw.failed ?? [],
+    gaps: raw.gaps ?? [],
+    recordedAt: raw.recordedAt ?? "",
+    harnessSurface: raw.harnessSurface ?? "",
+    helpfulnessCount: raw.helpfulnessCount ?? 0,
+    harmfulnessCount: raw.harmfulnessCount ?? 0,
+    status: raw.status ?? "active",
   };
 }
 
@@ -128,7 +162,7 @@ export class LessonsStore {
 
   private readAll(): Lesson[] {
     if (!existsSync(this.path)) return [];
-    return JSON.parse(readFileSync(this.path, "utf8")) as Lesson[];
+    return (JSON.parse(readFileSync(this.path, "utf8")) as Partial<Lesson>[]).map(normalizeLesson);
   }
 
   private writeAll(lessons: Lesson[]): void {
@@ -146,6 +180,10 @@ export class LessonsStore {
       failed: input.failed ?? [],
       gaps: input.gaps ?? [],
       recordedAt: now(),
+      harnessSurface: input.harnessSurface ?? "",
+      helpfulnessCount: 0,
+      harmfulnessCount: 0,
+      status: "active",
     };
     const all = this.readAll().filter((l) => l.id !== lesson.id);
     all.push(lesson);
@@ -198,6 +236,41 @@ export class LessonsStore {
       advisory: formatPlanningAdvisory(lessons),
       note: "advisory only — read-only suggestions; does not mutate prompts, tools, or scope",
     };
+  }
+
+  /**
+   * Return all ACTIVE lessons tagged to a specific harness surface (module/file).
+   * Empty string matches lessons with no surface tag (broader advisory).
+   */
+  getLessonsByHarnessSurface(surface: string): Lesson[] {
+    return this.readAll().filter(
+      (l) => l.status === "active" && (l.harnessSurface === surface || l.harnessSurface === ""),
+    );
+  }
+
+  /**
+   * Increment helpfulness or harmfulness counter for a lesson. Auto-deprecates
+   * when harmfulnessCount > helpfulnessCount * 2 (2:1 harm:helpful ratio).
+   * Returns the updated lesson, or null if the id is not found.
+   */
+  markLessonOutcome(id: string, outcome: "helpful" | "harmful"): Lesson | null {
+    const all = this.readAll();
+    const idx = all.findIndex((l) => l.id === id);
+    if (idx === -1) return null;
+    const prev = all[idx]!;
+    const updated: Lesson = {
+      ...prev,
+      helpfulnessCount: outcome === "helpful" ? prev.helpfulnessCount + 1 : prev.helpfulnessCount,
+      harmfulnessCount: outcome === "harmful" ? prev.harmfulnessCount + 1 : prev.harmfulnessCount,
+    };
+    // Auto-deprecate: 2:1 harm:helpful makes the lesson a net negative.
+    // Requires at least one helpful mark to avoid cold-start deprecation (0 helpful, 1 harmful).
+    const shouldDeprecate =
+      updated.helpfulnessCount > 0 && updated.harmfulnessCount >= updated.helpfulnessCount * 2;
+    const result: Lesson = { ...updated, status: shouldDeprecate ? "deprecated" : updated.status };
+    const next = [...all.slice(0, idx), result, ...all.slice(idx + 1)];
+    this.writeAll(next);
+    return result;
   }
 
   list(): Lesson[] {

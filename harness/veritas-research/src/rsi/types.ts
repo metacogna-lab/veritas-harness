@@ -41,6 +41,11 @@ export interface ProposalContext {
   pastAttempts: HarnessEditProposal[];
   /** A truthful description of the subtask. Must not obscure the objective's shape. */
   honestTaskDescription: string;
+  /**
+   * Read-only advisory text from the lessons delta store (never prescriptive —
+   * the proposer may consider these; they do not mutate the task description).
+   */
+  priorLessonContext?: string;
 }
 
 /** A bounded edit the proposer suggests. It is a candidate only — never applied here. */

@@ -14,6 +14,8 @@ import type { ResearchPlan } from "./schema.ts";
 
 export interface IngestOptions {
   inputPath: string;
+  /** Pre-built NEW.md content — skips readFileSync when provided. */
+  syntheticContent?: string;
   slug?: string;
   harnessRoot?: string;
   outputDir?: string;
@@ -46,7 +48,7 @@ export function buildIngestLLM(opts?: Partial<LLMBackboneOptions>): LLMBackbone 
 export async function runIngest(opts: IngestOptions): Promise<IngestResult> {
   const harnessRoot = opts.harnessRoot ?? defaultHarnessRoot();
   const inputPath = resolve(opts.inputPath);
-  const raw = readFileSync(inputPath, "utf8");
+  const raw = opts.syntheticContent ?? readFileSync(inputPath, "utf8");
   const intent = parseIntentFile(raw, inputPath);
   const slug = opts.slug ?? intent.frontmatter.slug;
 

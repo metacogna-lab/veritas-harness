@@ -1,0 +1,5 @@
+node_modules
+.veritas
+.env
+src/config/local.json
+*.log

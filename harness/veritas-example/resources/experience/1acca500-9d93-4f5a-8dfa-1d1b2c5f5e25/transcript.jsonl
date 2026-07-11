@@ -1,0 +1,6 @@
+{"seq":0,"timestamp":"2026-07-11T16:13:27.363Z","kind":"objective","content":"Measure scope-gate pass@1 for black-box mode"}
+{"seq":1,"timestamp":"2026-07-11T16:13:27.363Z","kind":"note","content":"research-plan slug=example-slug | phases: p1: Run scope-gate bench black-box mode and capture results | success: Reproducible pass@1 via verify-claims; At least one confirmed finding with provenance"}
+{"seq":2,"timestamp":"2026-07-11T16:13:27.363Z","kind":"status","content":"running"}
+{"seq":3,"timestamp":"2026-07-11T16:13:27.363Z","kind":"model","content":"Research complete per plan."}
+{"seq":4,"timestamp":"2026-07-11T16:13:27.363Z","kind":"note","content":"final answer produced"}
+{"seq":5,"timestamp":"2026-07-11T16:13:27.363Z","kind":"status","content":"done"}

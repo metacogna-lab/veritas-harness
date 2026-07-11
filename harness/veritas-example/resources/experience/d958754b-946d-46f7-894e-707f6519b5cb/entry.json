@@ -1,0 +1,22 @@
+{
+  "missionId": "d958754b-946d-46f7-894e-707f6519b5cb",
+  "slug": "d958754b-946d-46f7-894e-707f6519b5cb",
+  "recordedAt": "2026-07-11T16:08:51.685Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-XOFimY"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

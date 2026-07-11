@@ -1,0 +1,4 @@
+{"seq":0,"timestamp":"2026-07-11T16:10:13.214Z","kind":"objective","content":"x"}
+{"seq":1,"timestamp":"2026-07-11T16:10:13.214Z","kind":"status","content":"running"}
+{"seq":2,"timestamp":"2026-07-11T16:10:13.214Z","kind":"note","content":"agent error: All providers failed. anthropic/fake: model down"}
+{"seq":3,"timestamp":"2026-07-11T16:10:13.214Z","kind":"status","content":"error"}

@@ -1,0 +1,22 @@
+{
+  "missionId": "15af5eff-3545-476b-a214-6fe8b82eeb32",
+  "slug": "15af5eff-3545-476b-a214-6fe8b82eeb32",
+  "recordedAt": "2026-07-11T16:10:13.215Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-xgFwiu"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

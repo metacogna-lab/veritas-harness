@@ -5,9 +5,8 @@
       "name": "veritas-research",
       "index": 1,
       "path": "harness/veritas-research",
-      "capabilities": [
-        "research"
-      ],
+      "description": "Pure 8-plane template harness — runnable reference implementation. Extend by registering Loadouts and Tools; no domain logic here.",
+      "capabilities": [],
       "planes": [
         "provider",
         "safety",
@@ -25,7 +24,10 @@
       "name": "veritas-example",
       "index": 2,
       "path": "harness/veritas-example",
-      "capabilities": [],
+      "description": "Research domain harness — demonstrates end-to-end Veritas usage with ingest, RSI, loadouts (codebase-audit, research, web-recon), and bench suites.",
+      "capabilities": [
+        "research"
+      ],
       "planes": [
         "provider",
         "safety",

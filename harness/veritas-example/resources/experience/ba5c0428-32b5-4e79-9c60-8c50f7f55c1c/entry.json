@@ -1,0 +1,25 @@
+{
+  "missionId": "ba5c0428-32b5-4e79-9c60-8c50f7f55c1c",
+  "slug": "ba5c0428-32b5-4e79-9c60-8c50f7f55c1c",
+  "recordedAt": "2026-07-11T16:13:53.371Z",
+  "harnessConfig": {
+    "loadout": "research",
+    "specialistRoles": [
+      "researcher",
+      "analyst"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "http_get",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "bench/scope-gate",
+      "src/safety"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

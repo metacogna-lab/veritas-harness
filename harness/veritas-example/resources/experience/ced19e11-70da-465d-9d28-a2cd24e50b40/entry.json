@@ -1,0 +1,22 @@
+{
+  "missionId": "ced19e11-70da-465d-9d28-a2cd24e50b40",
+  "slug": "ced19e11-70da-465d-9d28-a2cd24e50b40",
+  "recordedAt": "2026-07-11T16:10:27.125Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-yKXRWc"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

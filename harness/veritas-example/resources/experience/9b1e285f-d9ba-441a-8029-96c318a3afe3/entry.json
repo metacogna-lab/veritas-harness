@@ -1,0 +1,22 @@
+{
+  "missionId": "9b1e285f-d9ba-441a-8029-96c318a3afe3",
+  "slug": "9b1e285f-d9ba-441a-8029-96c318a3afe3",
+  "recordedAt": "2026-07-11T16:10:27.113Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-int-meOsWI"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

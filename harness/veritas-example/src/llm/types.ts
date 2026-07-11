@@ -1,12 +1,5 @@
-/**
- * Provider plane — the single narrow LLM interface every harness composes against.
- *
- * A real harness wires provider transports (Anthropic, local, ...), a fallback
- * chain, token accounting, and a text-mode tool shim behind `LLMBackbone`. The
- * template ships only the interface plus a deterministic scripted backbone
- * (`ScriptedBackbone`) so the spine runs and tests pass with no network. Swap in
- * a real backbone as the first extension of a new harness.
- */
+/** Normalized LLM interface types, provider-agnostic. */
+import type { ProviderConfig } from "../config/index.ts";
 
 export type Role = "system" | "user" | "assistant" | "tool";
 
@@ -17,15 +10,11 @@ export interface Message {
   toolName?: string;
 }
 
+/** A tool schema as presented to the model (name + JSON-schema parameters). */
 export interface ToolSchema {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
-}
-
-export interface ToolCall {
-  name: string;
-  input: Record<string, unknown>;
 }
 
 export interface CompletionRequest {
@@ -36,12 +25,38 @@ export interface CompletionRequest {
   temperature?: number;
 }
 
+/** A tool call the model wants to make. */
+export interface ToolCall {
+  name: string;
+  input: Record<string, unknown>;
+}
+
+export interface TokenUsage {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 export interface CompletionResult {
   text: string;
   toolCalls: ToolCall[];
+  usage: TokenUsage;
 }
 
-/** The one method the execution plane depends on. */
-export interface LLMBackbone {
-  complete(req: CompletionRequest): Promise<CompletionResult>;
+/**
+ * A transport performs ONE raw call to a specific provider. It knows nothing
+ * about retries, fallback, or the text-mode shim — those live in LLMBackbone.
+ * `nativeToolCalls` is populated only for providers used in native
+ * function-calling mode; otherwise it is undefined and the shim parses tool
+ * calls out of `text`.
+ */
+export type Transport = (
+  cfg: ProviderConfig,
+  req: CompletionRequest,
+  signal?: AbortSignal,
+) => Promise<TransportResponse>;
+
+export interface TransportResponse {
+  text: string;
+  nativeToolCalls?: ToolCall[];
+  usage: TokenUsage;
 }

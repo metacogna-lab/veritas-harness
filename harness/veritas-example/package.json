@@ -14,7 +14,7 @@
     "bench": "bun scripts/bench.mjs",
     "verify-harness-candidate": "bun scripts/verify-harness-candidate.mjs",
     "lessons": "bun scripts/lessons.mjs",
-    "ingest": "tsx src/cli.ts ingest",
+    "ingest": "tsx src/ingest/cli.ts",
     "veritas-config": "bun scripts/veritas-config.mjs",
     "analyze": "bun scripts/analyze.mjs"
   },

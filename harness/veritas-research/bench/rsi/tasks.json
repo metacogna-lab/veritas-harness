@@ -1,0 +1,50 @@
+[
+  {
+    "id": "rsi-01",
+    "mode": "black",
+    "description": "3 grounded failures: 2 host-scope denials (same sig) + 1 fs-scope denial + 1 refuter retraction",
+    "input": [
+      { "missionId": "m-1", "terminalCause": "SCOPE DENIED: host \"api.x\" not in mission scope", "causalState": "fetch before scope widened", "evidenceRef": "obs:1" },
+      { "missionId": "m-2", "terminalCause": "SCOPE DENIED: host \"cdn.x\" not in mission scope", "causalState": "redirect to unlisted host", "evidenceRef": "obs:2" },
+      { "missionId": "m-3", "terminalCause": "SCOPE DENIED: fs-read path \"/etc/hosts\" outside scope", "causalState": "system path targeted", "evidenceRef": "obs:3" },
+      { "missionId": "m-4", "terminalCause": "refuter retracted finding", "causalState": "single unverified observation", "evidenceRef": "obs:4" },
+      { "missionId": "m-5", "terminalCause": "tool threw: network timeout", "causalState": "transient", "evidenceRef": "" }
+    ]
+  },
+  {
+    "id": "rsi-02",
+    "mode": "black",
+    "description": "empty failures list produces zero patterns",
+    "input": []
+  },
+  {
+    "id": "rsi-03",
+    "mode": "black",
+    "description": "all failures are ungrounded (empty evidenceRef) — zero patterns expected",
+    "input": [
+      { "missionId": "m-1", "terminalCause": "tool threw: timeout", "causalState": "flaky", "evidenceRef": "" },
+      { "missionId": "m-2", "terminalCause": "tool threw: timeout", "causalState": "flaky", "evidenceRef": "  " }
+    ]
+  },
+  {
+    "id": "rsi-04",
+    "mode": "black",
+    "description": "4 identical host-scope denial signatures collapse into 1 pattern with count 4",
+    "input": [
+      { "missionId": "m-1", "terminalCause": "SCOPE DENIED: host \"a.io\" not in scope", "causalState": "", "evidenceRef": "obs:1" },
+      { "missionId": "m-2", "terminalCause": "SCOPE DENIED: host \"b.io\" not in scope", "causalState": "", "evidenceRef": "obs:2" },
+      { "missionId": "m-3", "terminalCause": "SCOPE DENIED: host \"c.io\" not in scope", "causalState": "", "evidenceRef": "obs:3" },
+      { "missionId": "m-4", "terminalCause": "SCOPE DENIED: host \"d.io\" not in scope", "causalState": "", "evidenceRef": "obs:4" }
+    ]
+  },
+  {
+    "id": "rsi-05",
+    "mode": "black",
+    "description": "2 distinct signatures produce 2 patterns, most-frequent ranked first",
+    "input": [
+      { "missionId": "m-1", "terminalCause": "SCOPE DENIED: host denied", "causalState": "", "evidenceRef": "obs:1" },
+      { "missionId": "m-2", "terminalCause": "SCOPE DENIED: host denied", "causalState": "", "evidenceRef": "obs:2" },
+      { "missionId": "m-3", "terminalCause": "refuter retracted finding", "causalState": "", "evidenceRef": "obs:3" }
+    ]
+  }
+]

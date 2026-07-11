@@ -25,6 +25,7 @@ import type { ResearchPlan } from "../resources/research-plan.ts";
 import { planToStartOptions } from "../resources/research-plan.ts";
 import { evalPlanWithConfig, renderEvalReport } from "../resources/plan-eval.ts";
 import { digestSources } from "../resources/source-digest.ts";
+import { writeExperienceEntry, type HarnessConfigSnapshot } from "../mission/experience-store.ts";
 import type { MissionScope } from "../safety/scope.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -84,13 +85,23 @@ export class ControlPlane {
     tools?: ToolRegistry;
     /** If provided, proposed findings are refuted before the report is written. */
     refuterLLM?: LLMBackbone;
+    /**
+     * Root directory for the experience store (resources/experience/).
+     * Defaults to <harnessRoot>/resources/experience. Injectable for tests.
+     */
+    experienceStoreRoot?: string;
   }) {
     this.llm = opts.llm;
     this.store = opts.store;
     this.loadouts = opts.loadouts ?? defaultLoadouts();
     this.tools = opts.tools ?? starterRegistry();
     this.refuterLLM = opts.refuterLLM;
+    this.experienceStoreRoot =
+      opts.experienceStoreRoot ??
+      join(dirname(fileURLToPath(import.meta.url)), "..", "..", "resources", "experience");
   }
+
+  private readonly experienceStoreRoot: string;
 
   /** Resolve which loadout serves an objective. Explicit name wins; else default. */
   resolveLoadout(name?: string): Loadout {
@@ -184,6 +195,21 @@ export class ControlPlane {
 
     const snapshot = mission.snapshot();
     this.store.save(snapshot);
+
+    // Write to the experience store for the RSI outer loop to query later.
+    const harnessConfig: HarnessConfigSnapshot = {
+      loadout: loadout.name,
+      specialistRoles: loadout.specialists.map((s) => s.role),
+      toolNames: loadout.toolNames,
+      scopeHosts: scope.hosts,
+      scopePaths: scope.paths,
+    };
+    try {
+      writeExperienceEntry(this.experienceStoreRoot, snapshot, harnessConfig);
+    } catch {
+      emit(`experience-store: warn — could not write entry for ${mission.id}`);
+    }
+
     emit(`mission ${mission.id} ${result.status}`);
     return { id: mission.id, result, snapshot };
   }

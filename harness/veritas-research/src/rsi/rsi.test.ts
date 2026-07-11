@@ -1,7 +1,11 @@
 import { test, expect, describe } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { mineWeaknesses, signatureOf } from "./weakness-mining.ts";
+import { tmpdir } from "node:os";
+import { mineWeaknesses, signatureOf, gatherFailuresFromStore, writeFailureClusters } from "./weakness-mining.ts";
+import { writeExperienceEntry, type HarnessConfigSnapshot } from "../mission/experience-store.ts";
+import type { MissionSnapshot } from "../mission/types.ts";
 import { buildProposalContext, assertHonestContext, isProposalBounded, proposeEdit, type Proposer } from "./proposal.ts";
 import { decideValidation, validateProposal } from "./validation.ts";
 import { applyProposal } from "./apply.ts";
@@ -143,5 +147,228 @@ describe("run (dry-run orchestration)", () => {
     expect(result.dryRun).toBe(true);
     expect(result.outcomes.every((o) => o.released === false)).toBe(true);
     expect(summarizeRun(result)).toContain("dry-run");
+  });
+});
+
+// ── helpers ────────────────────────────────────────────────────────────────────
+
+const storeConfig: HarnessConfigSnapshot = {
+  loadout: "research",
+  specialistRoles: ["analyst"],
+  toolNames: ["read_file"],
+  scopeHosts: ["example.com"],
+  scopePaths: ["src/"],
+};
+
+function makeStoreSnapshot(id: string, errorContent: string): MissionSnapshot {
+  return {
+    id,
+    objective: "test mission",
+    scope: { hosts: ["example.com"], paths: ["src/"] },
+    status: "error",
+    transcript: [
+      { seq: 0, timestamp: "2026-01-01T00:00:00Z", kind: "objective", content: "test mission" },
+      {
+        seq: 1,
+        timestamp: "2026-01-01T00:00:01Z",
+        kind: "observation",
+        content: errorContent,
+        meta: { status: "error", tool: "http_get" },
+      },
+    ],
+    findings: [],
+  };
+}
+
+describe("experience store integration (T2)", () => {
+  test("gatherFailuresFromStore loads failures across multiple missions", () => {
+    const root = mkdtempSync(join(tmpdir(), "rsi-store-t2-"));
+    try {
+      writeExperienceEntry(root, makeStoreSnapshot("m-i1", 'SCOPE DENIED: host "a.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-i2", 'SCOPE DENIED: host "b.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-i3", "ERROR: tool threw parse error"), storeConfig);
+
+      const failures = gatherFailuresFromStore(root, ["m-i1", "m-i2", "m-i3"]);
+      expect(failures).toHaveLength(3);
+      expect(failures.every((f) => f.evidenceRef === "1")).toBe(true);
+      expect(failures[0]!.missionId).toBe("m-i1");
+      expect(failures[2]!.terminalCause).toContain("ERROR:");
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  });
+
+  test("writeFailureClusters writes failure-clusters.md to each mission dir", () => {
+    const root = mkdtempSync(join(tmpdir(), "rsi-clusters-t2-"));
+    try {
+      writeExperienceEntry(root, makeStoreSnapshot("m-c1", 'SCOPE DENIED: host "x.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-c2", 'SCOPE DENIED: host "y.io" not in scope'), storeConfig);
+
+      const failures = gatherFailuresFromStore(root, ["m-c1", "m-c2"]);
+      const patterns = mineWeaknesses(failures);
+      writeFailureClusters(root, ["m-c1", "m-c2"], patterns);
+
+      expect(existsSync(join(root, "m-c1", "failure-clusters.md"))).toBe(true);
+      expect(existsSync(join(root, "m-c2", "failure-clusters.md"))).toBe(true);
+      const content = readFileSync(join(root, "m-c1", "failure-clusters.md"), "utf8");
+      expect(content).toContain("# Failure Clusters");
+      expect(content).toContain("scope denied");
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  });
+
+  test("runRsi with targetMissions: clusters produced, dry-run, no source files touched", async () => {
+    const root = mkdtempSync(join(tmpdir(), "rsi-run-t2-"));
+    try {
+      writeExperienceEntry(root, makeStoreSnapshot("m-r1", 'SCOPE DENIED: host "a.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-r2", 'SCOPE DENIED: host "b.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-r3", "ERROR: tool threw: parse error"), storeConfig);
+
+      const proposer: Proposer = async () => stubProposal("src/safety/scope.ts");
+      const result = await runRsi({
+        targetMissions: ["m-r1", "m-r2", "m-r3"],
+        experienceStoreRoot: root,
+        editableSurfaces: surfaces,
+        behaviorsToPreserve: ["scope deny-by-default"],
+        suite,
+        proposer,
+        runTests: async () => ({ pass: true, detail: "ok" }),
+      });
+
+      // Clusters produced from real store failures
+      expect(result.patterns.length).toBeGreaterThan(0);
+      // Dry-run (no policy wired)
+      expect(result.dryRun).toBe(true);
+      // All outcomes hold — no autonomous release
+      expect(result.outcomes.every((o) => !o.released)).toBe(true);
+      // Every outcome is a valid HumanReviewPacket
+      for (const outcome of result.outcomes) {
+        expect(outcome.packet.instructions).toContain("not apply it for you");
+      }
+      // failure-clusters.md written to every mission dir
+      expect(existsSync(join(root, "m-r1", "failure-clusters.md"))).toBe(true);
+      expect(existsSync(join(root, "m-r2", "failure-clusters.md"))).toBe(true);
+      expect(existsSync(join(root, "m-r3", "failure-clusters.md"))).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  });
+
+  test("runRsi with lastN: reads N most recent missions from the store", async () => {
+    const root = mkdtempSync(join(tmpdir(), "rsi-lastn-t2-"));
+    try {
+      // Write 3 missions; lastN=2 should only load the 2 newest
+      writeExperienceEntry(root, makeStoreSnapshot("m-old", 'SCOPE DENIED: host "old.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-new1", 'SCOPE DENIED: host "new1.io" not in scope'), storeConfig);
+      writeExperienceEntry(root, makeStoreSnapshot("m-new2", 'SCOPE DENIED: host "new2.io" not in scope'), storeConfig);
+
+      const proposer: Proposer = async () => stubProposal("src/safety/scope.ts");
+      const result = await runRsi({
+        lastN: 2,
+        experienceStoreRoot: root,
+        editableSurfaces: surfaces,
+        behaviorsToPreserve: [],
+        suite,
+        proposer,
+        runTests: async () => ({ pass: true, detail: "ok" }),
+      });
+
+      // Should have loaded from 2 missions (at most 2 failure observations)
+      const totalFailures = result.patterns.reduce((n, p) => n + p.count, 0);
+      expect(totalFailures).toBeLessThanOrEqual(2);
+      expect(result.dryRun).toBe(true);
+    } finally {
+      rmSync(root, { recursive: true });
+    }
+  });
+
+  test("runRsi throws if experienceStoreRoot is missing when targetMissions is set", async () => {
+    await expect(
+      runRsi({
+        targetMissions: ["m-1"],
+        editableSurfaces: surfaces,
+        behaviorsToPreserve: [],
+        suite,
+        proposer: async () => stubProposal("src/safety/scope.ts"),
+        runTests: async () => ({ pass: true, detail: "ok" }),
+      }),
+    ).rejects.toThrow("experienceStoreRoot required");
+  });
+});
+
+describe("weakness mining — edge cases", () => {
+  test("empty failures array returns no patterns", () => {
+    expect(mineWeaknesses([])).toHaveLength(0);
+  });
+
+  test("all-ungrounded failures (no evidenceRef) produce no patterns", () => {
+    const ungrounded: FailureObservation[] = [
+      { missionId: "m-a", terminalCause: "tool threw: timeout", causalState: "network", evidenceRef: "" },
+      { missionId: "m-b", terminalCause: "tool threw: timeout", causalState: "network", evidenceRef: "  " },
+    ];
+    expect(mineWeaknesses(ungrounded)).toHaveLength(0);
+  });
+
+  test("four identical signatures collapse into one pattern with count 4", () => {
+    const obs: FailureObservation[] = Array.from({ length: 4 }, (_, i) => ({
+      missionId: `m-${i}`,
+      terminalCause: 'SCOPE DENIED: host "x.io" not in scope',
+      causalState: "fetch before scope was declared",
+      evidenceRef: `obs:${i}`,
+    }));
+    const patterns = mineWeaknesses(obs);
+    expect(patterns).toHaveLength(1);
+    expect(patterns[0]!.count).toBe(4);
+  });
+
+  test("patterns are ranked by count descending (most frequent first)", () => {
+    const obs: FailureObservation[] = [
+      { missionId: "m-1", terminalCause: "refuter retracted finding", causalState: "", evidenceRef: "obs:1" },
+      { missionId: "m-2", terminalCause: 'SCOPE DENIED: host "a.com" not in scope', causalState: "", evidenceRef: "obs:2" },
+      { missionId: "m-3", terminalCause: 'SCOPE DENIED: host "b.net" not in scope', causalState: "", evidenceRef: "obs:3" },
+      { missionId: "m-4", terminalCause: 'SCOPE DENIED: host "c.org" not in scope', causalState: "", evidenceRef: "obs:4" },
+    ];
+    const patterns = mineWeaknesses(obs);
+    expect(patterns[0]!.count).toBeGreaterThanOrEqual(patterns[1]!.count);
+  });
+
+  test("runRsi with empty failures produces zero patterns and zero outcomes", async () => {
+    const proposer: Proposer = async () => stubProposal("src/safety/scope.ts");
+    const result = await runRsi({
+      failures: [],
+      editableSurfaces: surfaces,
+      behaviorsToPreserve: [],
+      suite,
+      proposer,
+      runTests: async () => ({ pass: true, detail: "ok" }),
+    });
+    expect(result.patterns).toHaveLength(0);
+    expect(result.outcomes).toHaveLength(0);
+    expect(result.dryRun).toBe(true);
+  });
+
+  test("maxPatterns limits how many patterns are attempted", async () => {
+    const manyFailures: FailureObservation[] = [
+      { missionId: "m-1", terminalCause: "SCOPE DENIED: host denied", causalState: "", evidenceRef: "obs:1" },
+      { missionId: "m-2", terminalCause: "refuter retracted finding", causalState: "", evidenceRef: "obs:2" },
+      { missionId: "m-3", terminalCause: "tool threw: parse error", causalState: "", evidenceRef: "obs:3" },
+      { missionId: "m-4", terminalCause: "tool threw: not found", causalState: "", evidenceRef: "obs:4" },
+    ];
+    const called: string[] = [];
+    const trackingProposer: Proposer = async (ctx) => {
+      called.push(ctx.pattern.id);
+      return stubProposal("src/safety/scope.ts");
+    };
+    await runRsi({
+      failures: manyFailures,
+      editableSurfaces: surfaces,
+      behaviorsToPreserve: [],
+      suite,
+      proposer: trackingProposer,
+      runTests: async () => ({ pass: true, detail: "ok" }),
+      maxPatterns: 2,
+    });
+    expect(called.length).toBe(2);
   });
 });

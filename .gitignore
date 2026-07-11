@@ -13,3 +13,9 @@ harness/veritas-research/missions/*
 !harness/veritas-research/missions/example-slug/**
 blog/
 analysis/research-analysis-*.md
+
+# research PDFs (large binaries — keep markdown digests, exclude raw PDFs)
+research/raw/*.pdf
+
+# RSI experience store (runtime mission artifacts, generated per run)
+harness/veritas-research/resources/experience/

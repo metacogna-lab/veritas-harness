@@ -1,0 +1,61 @@
+{
+  "suite": "rsi",
+  "generatedAt": "2026-07-11T02:45:10.964Z",
+  "summary": {
+    "black_box": {
+      "n": 5,
+      "passed": 5,
+      "pass_at_1": 1,
+      "wilson95": {
+        "low": 0.5655,
+        "high": 1
+      }
+    },
+    "white_box": {
+      "n": 0,
+      "passed": 0,
+      "pass_at_1": 0,
+      "wilson95": {
+        "low": 0,
+        "high": 0
+      }
+    }
+  },
+  "outcomes": [
+    {
+      "id": "rsi-01",
+      "mode": "black",
+      "pass": true,
+      "expected": "3,2",
+      "actual": "3,2"
+    },
+    {
+      "id": "rsi-02",
+      "mode": "black",
+      "pass": true,
+      "expected": "0,0",
+      "actual": "0,0"
+    },
+    {
+      "id": "rsi-03",
+      "mode": "black",
+      "pass": true,
+      "expected": "0,0",
+      "actual": "0,0"
+    },
+    {
+      "id": "rsi-04",
+      "mode": "black",
+      "pass": true,
+      "expected": "1,4",
+      "actual": "1,4"
+    },
+    {
+      "id": "rsi-05",
+      "mode": "black",
+      "pass": true,
+      "expected": "2,2",
+      "actual": "2,2"
+    }
+  ]
+}

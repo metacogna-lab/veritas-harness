@@ -7,14 +7,34 @@
  * written to disk here. The proposer model and test runner are injected.
  */
 import type { FailureObservation, EditableSurface, RegressionSuite, FailurePattern } from "./types.ts";
-import { mineWeaknesses } from "./weakness-mining.ts";
+import { mineWeaknesses, gatherFailuresFromStore, writeFailureClusters } from "./weakness-mining.ts";
+import { listExperienceMissions } from "../mission/experience-store.ts";
 import { buildProposalContext, proposeEdit, type Proposer } from "./proposal.ts";
 import { validateProposal, type RunTests } from "./validation.ts";
 import { applyProposal, type ApplyOutcome } from "./apply.ts";
 import type { HumanReleasePolicy, HumanReleaseSession } from "../safety/human-release.ts";
 
 export interface RsiRunInput {
-  failures: FailureObservation[];
+  /**
+   * Direct failure list — for tests and callers that already have failures in hand.
+   * Required if neither targetMissions nor lastN is provided.
+   */
+  failures?: FailureObservation[];
+  /**
+   * Read failures from these specific mission IDs in the experience store.
+   * Mutually exclusive with `lastN`.
+   */
+  targetMissions?: string[];
+  /**
+   * Read failures from the N most recent missions in the experience store.
+   * Mutually exclusive with `targetMissions`.
+   */
+  lastN?: number;
+  /**
+   * Root path to the experience store (resources/experience/).
+   * Required when using `targetMissions` or `lastN`.
+   */
+  experienceStoreRoot?: string;
   editableSurfaces: EditableSurface[];
   behaviorsToPreserve: string[];
   suite: RegressionSuite;
@@ -34,7 +54,23 @@ export interface RsiRunResult {
 }
 
 export async function runRsi(input: RsiRunInput): Promise<RsiRunResult> {
-  const patterns = mineWeaknesses(input.failures);
+  // Resolve failures from the experience store if targetMissions or lastN is set.
+  let resolvedFailures: FailureObservation[];
+  let resolvedMissionIds: string[] | undefined;
+  if (input.targetMissions !== undefined) {
+    if (!input.experienceStoreRoot) throw new Error("runRsi: experienceStoreRoot required when targetMissions is set");
+    resolvedMissionIds = input.targetMissions;
+    resolvedFailures = gatherFailuresFromStore(input.experienceStoreRoot, input.targetMissions);
+  } else if (input.lastN !== undefined) {
+    if (!input.experienceStoreRoot) throw new Error("runRsi: experienceStoreRoot required when lastN is set");
+    const recent = listExperienceMissions(input.experienceStoreRoot).slice(0, input.lastN);
+    resolvedMissionIds = recent.map((m) => m.missionId);
+    resolvedFailures = gatherFailuresFromStore(input.experienceStoreRoot, resolvedMissionIds);
+  } else {
+    resolvedFailures = input.failures ?? [];
+  }
+
+  const patterns = mineWeaknesses(resolvedFailures);
   const top = patterns.slice(0, input.maxPatterns ?? 3);
   const outcomes: ApplyOutcome[] = [];
 
@@ -60,6 +96,11 @@ export async function runRsi(input: RsiRunInput): Promise<RsiRunResult> {
       session: input.session,
     });
     outcomes.push(outcome);
+  }
+
+  // Write failure-clusters.md into each mission's experience dir (even on dry-run).
+  if (input.experienceStoreRoot && resolvedMissionIds && resolvedMissionIds.length > 0) {
+    writeFailureClusters(input.experienceStoreRoot, resolvedMissionIds, patterns);
   }
 
   return { patterns, outcomes, dryRun: input.policy === undefined };

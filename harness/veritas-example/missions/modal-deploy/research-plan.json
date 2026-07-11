@@ -1,0 +1,81 @@
+{
+  "version": "1",
+  "metadata": {
+    "slug": "modal-deploy",
+    "ingestedAt": "2026-07-11T17:01:52.370Z",
+    "ingestVersion": "0.1.0",
+    "model": "claude-code/claude-sonnet-5"
+  },
+  "objective": "Research and produce a validated plan for deploying the Veritas veritas-example harness to Modal (serverless compute platform), covering container image compatibility, secrets/config handling, and mapping of existing CLI verbs to Modal app entrypoints.",
+  "loadout": "research",
+  "target": "/Users/nullzero/sensai-org/veritas/harness/veritas-example",
+  "scope": {
+    "hosts": [
+      "modal.com",
+      "docs.modal.com"
+    ],
+    "paths": [
+      "/Users/nullzero/sensai-org/veritas/harness/veritas-example"
+    ]
+  },
+  "specialists": [
+    {
+      "role": "researcher",
+      "focus": "Modal's deployment model (functions, images, secrets, volumes) and how it maps onto the harness's existing bun-based Dockerfile/docker-compose setup"
+    },
+    {
+      "role": "analyst",
+      "focus": "Synthesize findings into a deployment plan that preserves the harness's config/secret-resolution and reproducibility invariants"
+    }
+  ],
+  "phases": [
+    {
+      "id": "p1",
+      "description": "Research Modal's official documentation for container image requirements, function/app deployment model, and secrets management"
+    },
+    {
+      "id": "p2",
+      "description": "Assess compatibility of the veritas-example Dockerfile and bun runtime with Modal's supported base images and build process"
+    },
+    {
+      "id": "p3",
+      "description": "Identify how ANTHROPIC_API_KEY and other config values in src/config/ (env-var resolution, local.json) should be provided via Modal's secrets mechanism"
+    },
+    {
+      "id": "p4",
+      "description": "Map existing CLI commands (bun run build, bun test, bun run dev start/eval/digest, doctor) to Modal app entrypoints, noting which are one-shot jobs vs long-running"
+    },
+    {
+      "id": "p5",
+      "description": "Document risks from Modal's ephemeral filesystem for mission/evidence artifacts and how this interacts with the reproducibility invariant enforced by verify-claims"
+    }
+  ],
+  "sources": [
+    {
+      "kind": "lesson",
+      "path": "resources/lessons.json"
+    },
+    {
+      "kind": "resource",
+      "path": "src/resources/research-plan.ts"
+    },
+    {
+      "kind": "resource",
+      "path": "src/resources/source-digest.ts"
+    },
+    {
+      "kind": "resource",
+      "path": "src/resources/plan-eval.ts"
+    }
+  ],
+  "lessons": [],
+  "successCriteria": [
+    "Verify the resulting deployment plan reproduces via `bun run verify-claims` with zero unreproduced claims",
+    "Confirm at least 3 Modal-specific deployment risks (image build, secrets injection, ephemeral filesystem) are documented with mitigations",
+    "Reproduce a complete entrypoint mapping covering 100 percent of the harness's existing CLI verbs (build, test, doctor, dev start/eval/digest)"
+  ],
+  "benchmark": {
+    "suite": "verify-claims",
+    "mode": "white"
+  }
+}

@@ -57,3 +57,6 @@ The LLM fitter must emit **only** a JSON object matching this schema. Ingested N
 2. Every `phases[].description` must be honest (invariant 7).
 3. Default `loadout` to `research` when unspecified.
 4. Include only `sources` paths that exist in the catalog or NEW.md frontmatter.
+5. Every `successCriteria` entry MUST contain measurable language — at least one of:
+   `verify`, `confirm`, `reproduce`, `at least N`, `exactly`, `pass@`, `count`, `percent`, `rate`.
+   Example: "Verify deployment completes without error" not "Deploy successfully".

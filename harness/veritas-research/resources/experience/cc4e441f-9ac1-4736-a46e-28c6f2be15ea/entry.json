@@ -1,0 +1,22 @@
+{
+  "missionId": "cc4e441f-9ac1-4736-a46e-28c6f2be15ea",
+  "slug": "cc4e441f-9ac1-4736-a46e-28c6f2be15ea",
+  "recordedAt": "2026-07-11T08:01:15.993Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-17Djwr"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

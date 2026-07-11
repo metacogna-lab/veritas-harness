@@ -1,0 +1,22 @@
+{
+  "missionId": "1aa945c2-8af2-4e61-ad5d-05c2ddac4f78",
+  "slug": "1aa945c2-8af2-4e61-ad5d-05c2ddac4f78",
+  "recordedAt": "2026-07-11T15:30:33.843Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-SfhZke"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

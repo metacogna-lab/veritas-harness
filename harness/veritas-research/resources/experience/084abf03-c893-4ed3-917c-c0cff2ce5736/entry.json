@@ -1,0 +1,22 @@
+{
+  "missionId": "084abf03-c893-4ed3-917c-c0cff2ce5736",
+  "slug": "084abf03-c893-4ed3-917c-c0cff2ce5736",
+  "recordedAt": "2026-07-11T08:29:17.355Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-EW6Oh9"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

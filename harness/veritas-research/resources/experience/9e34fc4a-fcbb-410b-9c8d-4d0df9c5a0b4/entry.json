@@ -1,0 +1,22 @@
+{
+  "missionId": "9e34fc4a-fcbb-410b-9c8d-4d0df9c5a0b4",
+  "slug": "9e34fc4a-fcbb-410b-9c8d-4d0df9c5a0b4",
+  "recordedAt": "2026-07-11T02:38:30.105Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-int-t8rhwU"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

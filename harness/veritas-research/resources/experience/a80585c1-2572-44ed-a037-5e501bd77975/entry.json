@@ -1,0 +1,22 @@
+{
+  "missionId": "a80585c1-2572-44ed-a037-5e501bd77975",
+  "slug": "a80585c1-2572-44ed-a037-5e501bd77975",
+  "recordedAt": "2026-07-11T08:04:07.074Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-int-StbgGK"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

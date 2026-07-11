@@ -1,0 +1,22 @@
+{
+  "missionId": "39f7ba1c-4268-4562-848c-504e4bfd04bd",
+  "slug": "39f7ba1c-4268-4562-848c-504e4bfd04bd",
+  "recordedAt": "2026-07-11T08:01:57.612Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-747YjW"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

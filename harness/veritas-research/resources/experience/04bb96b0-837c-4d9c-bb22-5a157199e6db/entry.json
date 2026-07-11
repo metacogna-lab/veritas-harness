@@ -1,0 +1,22 @@
+{
+  "missionId": "04bb96b0-837c-4d9c-bb22-5a157199e6db",
+  "slug": "04bb96b0-837c-4d9c-bb22-5a157199e6db",
+  "recordedAt": "2026-07-11T08:01:57.609Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-BOIv7C"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

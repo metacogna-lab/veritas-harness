@@ -1,0 +1,22 @@
+{
+  "missionId": "76790bfa-1311-412d-adaa-78a7819fe829",
+  "slug": "76790bfa-1311-412d-adaa-78a7819fe829",
+  "recordedAt": "2026-07-11T08:29:16.762Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-FGd2Va"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

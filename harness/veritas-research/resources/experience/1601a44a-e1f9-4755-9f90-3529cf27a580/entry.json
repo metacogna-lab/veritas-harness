@@ -1,0 +1,22 @@
+{
+  "missionId": "1601a44a-e1f9-4755-9f90-3529cf27a580",
+  "slug": "1601a44a-e1f9-4755-9f90-3529cf27a580",
+  "recordedAt": "2026-07-11T08:04:07.081Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-int-6FxERg"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

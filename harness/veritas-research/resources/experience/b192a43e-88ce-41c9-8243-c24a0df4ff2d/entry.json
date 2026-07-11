@@ -1,0 +1,22 @@
+{
+  "missionId": "b192a43e-88ce-41c9-8243-c24a0df4ff2d",
+  "slug": "b192a43e-88ce-41c9-8243-c24a0df4ff2d",
+  "recordedAt": "2026-07-11T03:07:00.755Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-SeG2X6"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

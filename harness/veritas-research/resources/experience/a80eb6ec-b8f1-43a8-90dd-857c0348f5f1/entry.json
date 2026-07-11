@@ -1,0 +1,22 @@
+{
+  "missionId": "a80eb6ec-b8f1-43a8-90dd-857c0348f5f1",
+  "slug": "a80eb6ec-b8f1-43a8-90dd-857c0348f5f1",
+  "recordedAt": "2026-07-11T08:02:53.547Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-IOEqoM"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

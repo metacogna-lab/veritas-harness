@@ -29,8 +29,9 @@ test("every plane maps to modules that actually exist on disk (guards against dr
   }
 });
 
-test("the memory plane covers both durable ledger and ephemeral window", () => {
+test("the memory plane owns the durable ledger; ephemeral window is a domain extension", () => {
   const mods = PLANES.memory.modules.join(" ");
   expect(mods).toContain("mission");
-  expect(mods).toContain("context-window");
+  // context-window.ts is a domain extension — it lives in a concrete harness, not the template.
+  expect(PLANES.memory.role).toContain("context-window");
 });

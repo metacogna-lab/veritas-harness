@@ -1,0 +1,22 @@
+{
+  "missionId": "425ad4e3-cca6-4129-868c-705e82f89360",
+  "slug": "425ad4e3-cca6-4129-868c-705e82f89360",
+  "recordedAt": "2026-07-11T16:13:53.375Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-8g5UGZ"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

@@ -1,0 +1,22 @@
+{
+  "missionId": "43f18ddc-1f1d-4405-b529-38d31475e2af",
+  "slug": "43f18ddc-1f1d-4405-b529-38d31475e2af",
+  "recordedAt": "2026-07-11T16:13:53.367Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-WMgace"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

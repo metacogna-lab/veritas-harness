@@ -12,7 +12,7 @@
  *   - execute_scoped_tool (safe/active tiers only, explicit scope required)
  */
 import { z } from "zod";
-import { defaultLoadouts } from "./agent/loadouts.ts";
+import { LoadoutRegistry } from "./agent/specialists.ts";
 import { starterRegistry } from "./tools/index.ts";
 import { createSafetyCheck } from "./safety/index.ts";
 import type { MissionScope } from "./safety/scope.ts";
@@ -81,14 +81,18 @@ export const MCP_TOOL_SCHEMAS: McpToolSchema[] = [
 
 export interface McpHarnessServerOptions {
   store?: MissionStore;
+  /** Inject a populated LoadoutRegistry; defaults to empty (template harness has no built-in loadouts). */
+  loadouts?: LoadoutRegistry;
 }
 
 /** Lightweight MCP tool handler — same gates as the agent loop, no bypass path. */
 export class McpHarnessServer {
   private readonly store?: MissionStore;
+  private readonly loadouts: LoadoutRegistry;
 
   constructor(opts: McpHarnessServerOptions = {}) {
     this.store = opts.store;
+    this.loadouts = opts.loadouts ?? new LoadoutRegistry();
   }
 
   schemas(): McpToolSchema[] {
@@ -109,9 +113,7 @@ export class McpHarnessServer {
   }
 
   private listLoadouts(): McpToolResult {
-    const lines = defaultLoadouts()
-      .list()
-      .map((l) => `${l.name}: ${l.description}`);
+    const lines = this.loadouts.list().map((l) => `${l.name}: ${l.description}`);
     return { ok: true, content: lines.join("\n") || "(no loadouts)" };
   }
 

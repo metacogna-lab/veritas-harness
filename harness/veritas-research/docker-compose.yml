@@ -1,0 +1,9 @@
+services:
+  veritas:
+    build: .
+    env_file: .env
+    volumes:
+      - veritas-runs:/app/.veritas
+
+volumes:
+  veritas-runs:

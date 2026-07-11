@@ -1,0 +1,17 @@
+{
+  "name": "veritas-example",
+  "index": 2,
+  "description": "Veritas research domain harness — demonstrates end-to-end use of the 8-plane template. Includes ingest, RSI outer loop, benchmarks, and the research/codebase-audit/web-recon loadouts.",
+  "capabilities": ["research"],
+  "planes": [
+    "provider",
+    "safety",
+    "verification",
+    "memory",
+    "capability",
+    "execution",
+    "orchestration",
+    "control"
+  ],
+  "skills": ["harness-ingest", "harness-analysis"]
+}

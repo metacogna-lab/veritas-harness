@@ -1,0 +1,12 @@
+services:
+  veritas:
+    build: .
+    env_file: .env
+    volumes:
+      - ./missions:/app/missions
+      - veritas-runs:/app/.veritas
+      - veritas-experience:/app/resources/experience
+
+volumes:
+  veritas-runs:
+  veritas-experience:

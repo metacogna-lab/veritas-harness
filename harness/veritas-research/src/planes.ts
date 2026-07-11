@@ -28,8 +28,8 @@ export const PLANES = {
     modules: ["src/evidence/gate.ts", "src/evidence/refuter.ts"],
   },
   memory: {
-    role: "Durable append-only ledger (Mission) + ephemeral windowed context (rolling summary/scratchpad).",
-    modules: ["src/mission/index.ts", "src/memory/context-window.ts"],
+    role: "Durable append-only ledger (Mission). Ephemeral windowed context is a domain extension — add src/memory/context-window.ts when needed.",
+    modules: ["src/mission/index.ts"],
   },
   capability: {
     role: "Typed tool registry: schema-validated at the boundary, strict risk tiers.",

@@ -1,31 +1,23 @@
 #!/usr/bin/env tsx
 /**
- * Control-plane CLI — the human front door.
+ * Generic control-plane CLI — 8-plane template harness front door.
  *
  *   veritas start "<objective>" --target <t> [--loadout <name>] [--role <r>]
- *                               [--plan <research-plan.json>] [--max-steps <n>]
- *   veritas ingest --input <NEW.md> [--slug <slug>]
+ *                               [--max-steps <n>] [--pre-auth <tool,...>]
  *   veritas status <id>
  *   veritas report <id>
  *   veritas loadouts
- *   veritas rsi            # self-improving loop, DRY-RUN only (human-gated apply)
  *
- * Scope is derived from the chosen loadout's target adapter. Gated tools run
- * unattended here, so anything above `active` fails safe unless explicitly
- * pre-authorized with --pre-auth (invariant #2).
+ * Scope is derived from the chosen loadout's target adapter. This harness has
+ * no built-in loadouts — inject them via a custom ControlPlane or add a
+ * src/agent/loadouts.ts (see harness/veritas-example for a full domain example).
+ *
+ * For research-plan support (ingest, eval, digest, rsi), use veritas-example.
  */
 import { loadConfig, providerChain } from "./config/index.ts";
 import { LLMBackbone } from "./llm/index.ts";
-import { ControlPlane, PlanEvalError } from "./control/plane.ts";
+import { ControlPlane } from "./control/plane.ts";
 import { MissionStore } from "./control/store.ts";
-import { defaultLoadouts } from "./agent/loadouts.ts";
-import { loadResearchPlan } from "./resources/research-plan.ts";
-import { runIngest } from "./ingest/ingest.ts";
-import { digestSources } from "./resources/source-digest.ts";
-import { evalPlanWithConfig, renderEvalReport } from "./resources/plan-eval.ts";
-import { rsiDryRun } from "./rsi/dry-run.ts";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 
 const RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 
@@ -66,7 +58,14 @@ async function main(): Promise<number> {
   const store = new MissionStore(RUNS_DIR);
 
   if (verb === "loadouts") {
-    for (const l of defaultLoadouts().list()) print(`${l.name} — ${l.description}`);
+    const plane = new ControlPlane({ llm: buildLLM(), store });
+    const all = plane["loadouts"].list();
+    if (all.length === 0) {
+      print("(no loadouts registered — add src/agent/loadouts.ts and inject via ControlPlane)");
+      print("See harness/veritas-example for a full research-domain example.");
+    } else {
+      for (const l of all) print(`${l.name} — ${l.description}`);
+    }
     return 0;
   }
 
@@ -96,111 +95,29 @@ async function main(): Promise<number> {
     return 0;
   }
 
-  if (verb === "rsi") {
-    // Self-improving loop, DRY-RUN only: mine → propose → validate → human-gated apply.
-    // Never applies an edit; the apply stage is gated by requireHumanRelease (invariant #5).
-    const summary = await rsiDryRun();
-    print(summary);
-    return 0;
-  }
-
-  if (verb === "eval") {
-    const { flags } = parseFlags(rest);
-    const planPath = flags.plan;
-    if (!planPath) return usage("eval --plan <research-plan.json>");
-    try {
-      const plan = loadResearchPlan(planPath);
-      const result = evalPlanWithConfig(plan);
-      print(renderEvalReport(result));
-      return result.pass ? 0 : 1;
-    } catch (err) {
-      process.stderr.write(`eval: ${(err as Error).message}\n`);
-      return 1;
-    }
-  }
-
-  if (verb === "digest") {
-    const { flags } = parseFlags(rest);
-    const planPath = flags.plan;
-    if (!planPath) return usage("digest --plan <research-plan.json> [--force]");
-    try {
-      const plan = loadResearchPlan(planPath);
-      const harnessRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-      const result = await digestSources({
-        plan,
-        harnessRoot,
-        llm: buildLLM(),
-        force: flags.force === "true",
-        onEvent: print,
-      });
-      print(`digest: complete — ${result.sources.length} source(s) → ${result.summaryDir}`);
-      print(`digest: synthesis → ${result.synthesisPath}`);
-      return 0;
-    } catch (err) {
-      process.stderr.write(`digest: ${(err as Error).message}\n`);
-      return 1;
-    }
-  }
-
-  if (verb === "ingest") {
-    const { flags } = parseFlags(rest);
-    const input = flags.input;
-    if (!input) return usage("ingest --input <NEW.md> [--slug <slug>] [--dry-run]");
-    try {
-      const { plan, outputPath } = await runIngest({
-        inputPath: input,
-        slug: flags.slug,
-        dryRun: flags["dry-run"] === "true",
-      });
-      if (flags["dry-run"] === "true") {
-        print(JSON.stringify(plan, null, 2));
-      } else {
-        print(`ingest: wrote ${outputPath}`);
-        print(`  objective: ${plan.objective}`);
-        print(`  loadout: ${plan.loadout}`);
-      }
-      return 0;
-    } catch (err) {
-      process.stderr.write(`ingest: ${(err as Error).message}\n`);
-      return 1;
-    }
-  }
-
   if (verb === "start") {
     const { positionals, flags } = parseFlags(rest);
-    const planPath = flags.plan;
-    const plan = planPath ? loadResearchPlan(planPath) : undefined;
-    const objective = plan?.objective ?? positionals[0];
-    const target = plan?.target ?? flags.target;
+    const objective = positionals[0];
+    const target = flags.target;
     if (!objective || !target) {
-      return usage('start "<objective>" --target <t> | start --plan <research-plan.json>');
+      return usage('start "<objective>" --target <t> [--loadout <name>] [--role <r>]');
     }
     const plane = new ControlPlane({ llm: buildLLM(), store });
     const preAuth = flags["pre-auth"] ? flags["pre-auth"].split(",").map((s) => s.trim()) : undefined;
-    try {
-      const { id, result } = await plane.start({
-        objective,
-        target,
-        plan,
-        loadout: flags.loadout ?? plan?.loadout,
-        role: flags.role,
-        maxSteps: flags["max-steps"] ? Number(flags["max-steps"]) : undefined,
-        policy: preAuth ? { preAuthorized: preAuth } : undefined,
-        onEvent: print,
-        skipDigest: flags["skip-digest"] === "true",
-      });
-      print(`\nmission ${id} finished: ${result.status}`);
-      return result.status === "error" ? 1 : 0;
-    } catch (err) {
-      if (err instanceof PlanEvalError) {
-        process.stderr.write(`\n${err.message}\n`);
-        return 1;
-      }
-      throw err;
-    }
+    const { id, result } = await plane.start({
+      objective,
+      target,
+      loadout: flags.loadout,
+      role: flags.role,
+      maxSteps: flags["max-steps"] ? Number(flags["max-steps"]) : undefined,
+      policy: preAuth ? { preAuthorized: preAuth } : undefined,
+      onEvent: print,
+    });
+    print(`\nmission ${id} finished: ${result.status}`);
+    return result.status === "error" ? 1 : 0;
   }
 
-  return usage("start | eval | digest | ingest | status | report | loadouts");
+  return usage("start | status | report | loadouts");
 }
 
 function usage(msg: string): number {

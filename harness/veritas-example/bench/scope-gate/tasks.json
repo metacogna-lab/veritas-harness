@@ -1,0 +1,12 @@
+[
+  { "id": "sg-01", "mode": "white", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "https://example.com/a" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } },
+  { "id": "sg-02", "mode": "white", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "https://evil.test" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } },
+  { "id": "sg-03", "mode": "white", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "http://127.0.0.1" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } },
+  { "id": "sg-04", "mode": "white", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "http://10.0.0.5" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } },
+  { "id": "sg-05", "mode": "white", "input": { "call": { "toolName": "read_file", "targets": [{ "kind": "fs-read", "value": "/work/project/src/a.ts" }] }, "scope": { "hosts": [], "paths": ["/work/project"] } } },
+  { "id": "sg-06", "mode": "white", "input": { "call": { "toolName": "read_file", "targets": [{ "kind": "fs-read", "value": "/work/project/../../etc/passwd" }] }, "scope": { "hosts": [], "paths": ["/work/project"] } } },
+  { "id": "sg-07", "mode": "black", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "https://api.example.com/v1" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } },
+  { "id": "sg-08", "mode": "black", "input": { "call": { "toolName": "read_file", "targets": [{ "kind": "fs-read", "value": "/work/project-secret/x" }] }, "scope": { "hosts": [], "paths": ["/work/project"] } } },
+  { "id": "sg-09", "mode": "black", "input": { "call": { "toolName": "shell", "targets": [{ "kind": "shell", "value": "ls" }] }, "scope": { "hosts": [], "paths": ["/work"] } } },
+  { "id": "sg-10", "mode": "black", "input": { "call": { "toolName": "http_get", "targets": [{ "kind": "network", "value": "http://[::1]:3000" }] }, "scope": { "hosts": ["example.com"], "paths": [] } } }
+]

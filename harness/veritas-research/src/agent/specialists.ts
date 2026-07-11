@@ -84,4 +84,9 @@ export class LoadoutRegistry {
     if (!role) return loadout.specialists[0];
     return loadout.specialists.find((s) => s.role === role);
   }
+
+  /** Alias for specialist() — select a specialist by role within a loadout. */
+  selectSpecialist(loadoutName: string, role?: string): Specialist | undefined {
+    return this.specialist(loadoutName, role);
+  }
 }

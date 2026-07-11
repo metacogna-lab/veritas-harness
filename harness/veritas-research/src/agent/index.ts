@@ -23,7 +23,6 @@ import { checkScope } from "../safety/scope.ts";
 import type { Specialist } from "./specialists.ts";
 
 export * from "./specialists.ts";
-export * from "./loadouts.ts";
 
 export type AgentStopReason = "answered" | "max_steps" | "error";
 

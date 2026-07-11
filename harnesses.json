@@ -5,7 +5,9 @@
       "name": "veritas-research",
       "index": 1,
       "path": "harness/veritas-research",
-      "capabilities": ["research"],
+      "capabilities": [
+        "research"
+      ],
       "planes": [
         "provider",
         "safety",
@@ -17,6 +19,24 @@
         "control"
       ],
       "createdAt": "2026-07-09",
+      "status": "active"
+    },
+    {
+      "name": "veritas-example",
+      "index": 2,
+      "path": "harness/veritas-example",
+      "capabilities": [],
+      "planes": [
+        "provider",
+        "safety",
+        "verification",
+        "memory",
+        "capability",
+        "execution",
+        "orchestration",
+        "control"
+      ],
+      "createdAt": "2026-07-11",
       "status": "active"
     }
   ]

@@ -1,8 +1,8 @@
 {
   "name": "veritas-research",
   "index": 1,
-  "description": "Veritas research meta-harness — canonical build target and harness #1. Conformed to the meta-harness pipeline via this manifest (never regenerated).",
-  "capabilities": ["research"],
+  "description": "Pure 8-plane template harness — runnable reference implementation of the Veritas architecture. Extend by adding Loadouts and Tools; do not add domain logic here. For a full research-domain example, see harness/veritas-example.",
+  "capabilities": [],
   "planes": [
     "provider",
     "safety",
@@ -13,5 +13,5 @@
     "orchestration",
     "control"
   ],
-  "skills": ["harness-ingest", "harness-analysis"]
+  "skills": []
 }

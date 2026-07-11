@@ -3,6 +3,8 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { McpHarnessServer } from "./mcp-server.ts";
+import { LoadoutRegistry } from "./agent/specialists.ts";
+import type { Loadout } from "./agent/specialists.ts";
 import { MissionStore } from "./control/store.ts";
 import { Mission } from "./mission/index.ts";
 
@@ -42,11 +44,26 @@ describe("McpHarnessServer — no safety bypass via MCP", () => {
     expect(result.content).toContain("unknown tool");
   });
 
-  test("list_loadouts returns registered loadouts", async () => {
+  test("list_loadouts returns empty when no loadouts registered", async () => {
     const mcp = new McpHarnessServer();
     const result = await mcp.handleToolCall("list_loadouts", {});
     expect(result.ok).toBe(true);
-    expect(result.content).toContain("codebase-audit");
+    expect(result.content).toBe("(no loadouts)");
+  });
+
+  test("list_loadouts returns injected loadouts", async () => {
+    const stub: Loadout = {
+      name: "stub",
+      description: "stub loadout for test",
+      toolNames: ["read_file"],
+      specialists: [{ role: "r", systemPrompt: "p", toolAllowlist: ["read_file"] }],
+      targetAdapter: { name: "fs", buildScope: (t) => ({ hosts: [], paths: [t] }), describeScope: () => "" },
+    };
+    const loadouts = new LoadoutRegistry().register(stub);
+    const mcp = new McpHarnessServer({ loadouts });
+    const result = await mcp.handleToolCall("list_loadouts", {});
+    expect(result.ok).toBe(true);
+    expect(result.content).toContain("stub");
   });
 
   test("mission_status reads from store", async () => {

@@ -1,0 +1,87 @@
+{
+  "suite": "scope-gate",
+  "candidatePath": "src/config/default.json",
+  "evaluatedAt": "2026-07-11T03:07:06.870Z",
+  "decision": "promote",
+  "rationale": "no regression — black-box 100%, white-box 100%",
+  "candidateScores": {
+    "black_box": 1,
+    "white_box": 1
+  },
+  "baselineScores": {
+    "black_box": 1,
+    "white_box": 1
+  },
+  "outcomes": [
+    {
+      "id": "sg-01",
+      "mode": "white",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-02",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-03",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-04",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-05",
+      "mode": "white",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-06",
+      "mode": "white",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-07",
+      "mode": "black",
+      "pass": true,
+      "expected": "allow",
+      "actual": "allow"
+    },
+    {
+      "id": "sg-08",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-09",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    },
+    {
+      "id": "sg-10",
+      "mode": "black",
+      "pass": true,
+      "expected": "deny",
+      "actual": "deny"
+    }
+  ]
+}

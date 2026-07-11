@@ -12,8 +12,30 @@ import { join } from "node:path";
 import { ControlPlane } from "./plane.ts";
 import { MissionStore } from "./store.ts";
 import { LLMBackbone } from "../llm/index.ts";
+import { LoadoutRegistry } from "../agent/specialists.ts";
+import type { Loadout } from "../agent/specialists.ts";
 import type { Transport, TransportResponse } from "../llm/types.ts";
 import type { ProviderConfig } from "../config/index.ts";
+
+const auditLoadout: Loadout = {
+  name: "codebase-audit",
+  description: "Read and audit a filesystem scope.",
+  toolNames: ["read_file", "list_dir", "record_finding"],
+  specialists: [
+    {
+      role: "auditor",
+      systemPrompt: "You are a meticulous code auditor. Explore within scope. Record every finding.",
+      toolAllowlist: ["read_file", "list_dir", "record_finding"],
+    },
+  ],
+  targetAdapter: {
+    name: "filesystem",
+    buildScope: (target) => ({ hosts: [], paths: [target] }),
+    describeScope: (scope) => `paths: ${scope.paths.join(", ")}`,
+  },
+};
+
+const loadouts = new LoadoutRegistry().register(auditLoadout);
 
 const cfg: ProviderConfig = {
   provider: "anthropic",
@@ -61,7 +83,7 @@ describe("INT full-spine end-to-end", () => {
       { text: "app.ts sets debug = true.", usage: zero },
     ]);
 
-    const plane = new ControlPlane({ llm: main, store, refuterLLM: skeptic() });
+    const plane = new ControlPlane({ llm: main, store, refuterLLM: skeptic(), loadouts });
     const { id, result, snapshot } = await plane.start({
       objective: "audit app.ts for a debug flag",
       target: dir,
@@ -97,7 +119,7 @@ describe("INT full-spine end-to-end", () => {
       { text: "done.", usage: zero },
     ]);
 
-    const plane = new ControlPlane({ llm: main, store, refuterLLM: skeptic() });
+    const plane = new ControlPlane({ llm: main, store, refuterLLM: skeptic(), loadouts });
     const { snapshot } = await plane.start({ objective: "audit", target: dir, loadout: "codebase-audit" });
     expect(snapshot.findings[0]!.status).toBe("retracted");
   });

@@ -1,0 +1,12 @@
+{
+  "sg-01": "allow",
+  "sg-02": "deny",
+  "sg-03": "deny",
+  "sg-04": "deny",
+  "sg-05": "allow",
+  "sg-06": "deny",
+  "sg-07": "allow",
+  "sg-08": "deny",
+  "sg-09": "deny",
+  "sg-10": "deny"
+}

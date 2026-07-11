@@ -1,0 +1,22 @@
+{
+  "missionId": "38299dc1-60f4-4801-be2c-a63999725ea2",
+  "slug": "38299dc1-60f4-4801-be2c-a63999725ea2",
+  "recordedAt": "2026-07-11T16:51:10.202Z",
+  "harnessConfig": {
+    "loadout": "codebase-audit",
+    "specialistRoles": [
+      "auditor"
+    ],
+    "toolNames": [
+      "read_file",
+      "list_dir",
+      "record_finding"
+    ],
+    "scopeHosts": [],
+    "scopePaths": [
+      "/var/folders/1b/rgchpsl92j197mwwwch1mbmw0000gn/T/veritas-code-y5SmVG"
+    ]
+  },
+  "scores": null,
+  "failureClusterPath": null
+}

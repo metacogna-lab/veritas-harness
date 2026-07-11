@@ -19,46 +19,63 @@ The meta-harness has no mission loop of its own. It does not run agents. It crea
 
 ---
 
-## Veritas Research (harness #1)
+## Veritas Research (harness #1) — pure 8-plane template
 
-`harness/veritas-research/` is the **first concrete instantiation** of the Veritas architecture. Its domain is structured research: ingest a brief, scope a corpus, run a ReAct loop against authorised sources, verify findings adversarially, and produce a reproducible report.
+`harness/veritas-research/` is the **runnable reference implementation** of the 8-plane spine. It contains only generic infrastructure — no domain loadouts, no ingest pipeline, no RSI, no bench suites.
 
 It provides:
 
-- A **ReAct agent loop** backed by the full safety spine (scope gate + approval tiers + human-release gate)
-- Three **loadouts** covering the research domain's surface:
-  - `research` — structured missions driven by an ingested research plan; tools: `read_file`, `list_dir`, `http_get`, `record_finding`
-  - `codebase-audit` — read-only audit of a filesystem scope; tools: `read_file`, `list_dir`, `record_finding`
-  - `web-recon` — information gathering from authorised hosts; tools: `http_get`, `record_finding`
-- The **ingest pipeline** (`bun run ingest`) — compiles a `NEW.md` research brief into a validated `research-plan.json` with scope, sources, and phases
-- The **evidence ledger and refuter** — every finding traces to a real observation; a second model instance adversarially challenges it before it is confirmed
-- The **RSI outer loop** (`bun run dev rsi`, `/evolve-harness`) — mines failure patterns from mission history, proposes loadout edits, validates against committed benchmarks, and surfaces a human review packet; never self-applies
-- The **experience store** (`resources/experience/`) and **lessons delta store** (`resources/lessons.json`) — queryable per-mission history that feeds the RSI pipeline
-- Two harness-specific skills: `harness-ingest` and `harness-analysis`
+- The **ReAct agent loop** (`src/agent/`) backed by the full safety spine
+- The **`LoadoutRegistry`** class and `Loadout`/`Specialist`/`TargetAdapter` interfaces — the composition points for adding domains
+- The **evidence ledger and refuter** (`src/evidence/`) — provenance gate + adversarial second model
+- The **MCP server** (`src/mcp-server.ts`) — scope-gated, safe subset; loadouts injected at construction
+- Generic scripts: `doctor.mjs`, `veritas-config.mjs`
+- **Docker files**: `Dockerfile`, `docker-compose.yml`
+- **No concrete loadouts** — `bun src/cli.ts loadouts` prints `(no loadouts registered)` by design
 
-Veritas Research also serves as the **reference implementation**: the template every new harness is scaffolded from, and the living proof that the 8-plane architecture composes correctly.
+When you need to run a real mission, use veritas-example (or create your own harness from this template).
 
 ---
 
-## The overlap
+## Veritas Example (harness #2) — research domain harness
 
-Veritas Research is simultaneously two things:
+`harness/veritas-example/` is the **concrete domain harness** demonstrating end-to-end Veritas usage. It extends the 8-plane template with everything the research domain needs.
 
-| Role | What it means |
-|------|--------------|
-| **A harness** | An agent domain registered in `harnesses.json`, governed by the meta-harness pipeline, using the standard 8-plane spine |
-| **The reference implementation** | The canonical build target and the template new harnesses inherit from; if it breaks, the meta-harness is broken |
+It provides:
 
-This dual role creates a tight feedback loop: improvements to Veritas Research's safety plane, evidence model, or RSI machinery are improvements to the template that every future harness inherits. The meta-harness does not impose this — it is a consequence of Veritas Research being harness #1.
+- Three **loadouts** (`src/agent/loadouts.ts`):
+  - `codebase-audit` — read-only filesystem audit; tools: `read_file`, `list_dir`, `record_finding`
+  - `research` — structured missions driven by an ingested research plan; tools: `read_file`, `list_dir`, `http_get`, `record_finding`
+  - `web-recon` — information gathering from authorised hosts; tools: `http_get`, `record_finding`
+- The **ingest pipeline** (`bun run ingest`) — compiles a `NEW.md` brief into a validated `research-plan.json`
+- The **RSI outer loop** (`/evolve-harness`) — mines failure patterns, proposes loadout edits, validates against committed benchmarks; never self-applies
+- The **experience store** (`resources/experience/`) and **lessons delta store** (`resources/lessons.json`)
+- Two harness-specific skills: `harness-ingest`, `harness-analysis`
+- **Docker files**: `Dockerfile`, `docker-compose.yml` (with mission + experience volume mounts)
+- Guided walkthrough in `EXAMPLE.md`
+
+---
+
+## The split
+
+The previous dual role of veritas-research (template + domain harness) has been separated:
+
+| | veritas-research | veritas-example |
+|---|---|---|
+| Role | 8-plane template / infrastructure reference | Research domain harness |
+| Loadouts | None (inject your own) | codebase-audit, research, web-recon |
+| Domain code | None | ingest, RSI, resources, memory/context-window |
+| Skills | None | harness-ingest, harness-analysis |
+| `bun test` | 178 tests (pure infrastructure) | 243 tests (includes domain) |
+
+The template harness is the proof the 8-plane architecture composes. The domain harness is the proof it runs real missions.
 
 The skills are partitioned to make the boundary explicit:
 
 | Location | Scope | Examples |
 |----------|-------|---------|
 | `skills/` (meta root) | Any harness | `harness-tool-adder`, `harness-refuter`, `harness-evolver` |
-| `harness/veritas-research/skills/` | Research domain only | `harness-ingest`, `harness-analysis` |
-
-A generic skill like `harness-refuter` can adversarially verify a finding in any harness. A domain skill like `harness-ingest` only knows how to compile a research brief — it has no meaning outside the research loadout.
+| `harness/veritas-example/skills/` | Research domain only | `harness-ingest`, `harness-analysis` |
 
 ---
 
@@ -67,11 +84,9 @@ A generic skill like `harness-refuter` can adversarially verify a finding in any
 The meta-harness root (`package.json`, `meta/`, `harnesses.json`) contains no agent loop, no tools, and no mission state. It runs two classes of commands:
 
 ```bash
-bun run create-harness <name>   # scaffold a new harness
+bun run create-harness <name>   # scaffold a new harness from the 8-plane template
 bun run list-harnesses          # show registry
-bun run harness-doctor          # meta-level health check
+bun run harness-doctor          # meta-level health check (both harnesses must pass)
 ```
 
-Veritas Research contains no registry management, no scaffolding pipeline, and no knowledge of other harnesses. It knows only its own domain, its own loadouts, and its own committed benchmarks.
-
-They share the architecture. They do not share code.
+Neither harness contains registry management, scaffolding pipeline, or knowledge of other harnesses. They share the architecture. They do not share code.

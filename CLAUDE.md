@@ -9,10 +9,11 @@ research meta-harness: a tiered agent harness (BASIC → INT → ADV) that can b
 scoped "individual" per project sub-folder. The model supplies judgment; the harness supplies
 structure, safety, and reproducibility — never the reverse.
 
-This repo implements the Veritas research meta-harness under **`harness/veritas-research/`**
-(canonical build target). Read `agents/config/agents-config.md` at the start of any session
-touching this repo — it is the operating mandate, not background reading. Session state and
-remaining work: `agents/state/state-2026-07-09T1716.md`, build log: `agents/state/build-log.md`.
+This repo contains two registered harnesses:
+- **`harness/veritas-research/`** — pure 8-plane template harness (runnable reference implementation, no domain logic). This is where the generic infrastructure lives.
+- **`harness/veritas-example/`** — research domain harness (the concrete example: ingest, RSI, loadouts, bench suites). Start here to run actual missions.
+
+Read `agents/config/agents-config.md` at the start of any session touching this repo — it is the operating mandate, not background reading. Session state and remaining work: `agents/state/state-2026-07-09T1716.md`, build log: `agents/state/build-log.md`.
 
 **Provenance note:** the reference docs in `agents/docs/` analyze `elder-plinius/T3MP3ST`, an
 offensive-security multi-agent framework, purely as an engineering artifact. The docs already
@@ -24,27 +25,39 @@ training — must never be built. §"Non-negotiable safety invariants" below, po
 
 ## Commands
 
-All commands run from **`harness/veritas-research/`** (per global mandate, `npm` in source docs is `bun`):
+**Template harness** (`harness/veritas-research/`) — generic 8-plane infrastructure only:
 
 ```
 cd harness/veritas-research
 bun install                    # install deps
-bun run dev                    # tsx src/cli.ts — run the harness CLI
+bun run build                  # tsc
+bun test                       # run the test suite (178 tests, no domain tests)
+bun run doctor                 # scripts/doctor.mjs — env/provider/PATH healthcheck
+bun run veritas-config         # interactive local.json wizard (terminal)
+bun src/cli.ts loadouts        # list registered loadouts (empty by default — add your own)
+bun src/cli.ts start "<objective>" --target <path> --loadout <name>
+bun src/cli.ts status <id>
+bun src/cli.ts report <id>
+```
+
+**Domain harness** (`harness/veritas-example/`) — full research domain, ingest, RSI, bench:
+
+```
+cd harness/veritas-example
+bun install                    # install deps
 bun run build                  # tsc
 bun test                       # run the test suite (co-located *.test.ts per module)
-bun test src/safety/scope.test.ts   # run a single test file
 bun run doctor                 # scripts/doctor.mjs — env/provider/PATH healthcheck
-bun run verify-claims          # scripts/verify-claims.mjs — re-derive every headline number
-                               # from committed artifacts; pre-push hook at .githooks/pre-push
-bun run verify-finding         # scripts/verify-finding.mjs — run the refuter against a finding
-bun run bench                  # scripts/bench.mjs — run committed-oracle benchmark suites
-bun run lessons                # scripts/lessons.mjs — record/retrieve mission lessons
+bun run verify-claims          # re-derive every headline number from committed artifacts
+bun run verify-finding         # run the refuter against a finding
+bun run bench                  # run committed-oracle benchmark suites
+bun run lessons                # record/retrieve mission lessons
 bun run ingest --input ingest/NEW.md   # compile research brief → research-plan.json
 bun run dev eval --plan missions/<slug>/research-plan.json    # run dogma gate only (no mission)
-bun run dev digest --plan missions/<slug>/research-plan.json  # digest sources → resources/summary/<slug>/
-bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan (eval + digest + run)
-bun run veritas-config             # interactive local.json wizard (terminal)
-bun run analyze                    # generate analysis/research-analysis-{datetime}.md
+bun run dev digest --plan missions/<slug>/research-plan.json  # digest sources
+bun run dev start --plan missions/<slug>/research-plan.json   # start from ingested plan
+bun run veritas-config         # interactive local.json wizard (terminal)
+bun run analyze                # generate analysis/research-analysis-{datetime}.md
 ```
 
 Slash commands: `/ingest`, `/provider`, `/veritas-config` (see `skills/` and `.claude/commands/`).
@@ -55,17 +68,12 @@ not this project's dependency tree).
 
 ### Model / provider selection
 
-Config lives in **`harness/veritas-research/src/config/`** (`default.json` + optional gitignored
-`local.json`). Default provider is **Anthropic (Claude API)** — not Ollama. See **`PROVIDER.md`**
-for operator guide; use `/provider [name]` for model catalog info.
+Config lives in **`src/config/`** of each harness (`default.json` + optional gitignored `local.json`).
+Default provider is **Anthropic (Claude API)**. See each harness's `PROVIDER.md`; use `/provider [name]` for the model catalog.
 
 ```bash
-# One-off provider switch
+# One-off provider switch (run from the harness directory)
 HARNESS_PROVIDER=ollama HARNESS_MODEL=qwen3-coder:latest bun run dev start ...
-HARNESS_PROVIDER=claude-code bun run ingest --input ingest/NEW.md
-HARNESS_PROVIDER=codex bun run dev start ...
-
-# One-off model switch (keeps default provider)
 HARNESS_MODEL=claude-opus-4-8 bun run dev start "objective" --target .
 
 # Persistent overrides
@@ -182,32 +190,48 @@ pipeline that scaffolds `harness/<name>/`, installs capability-pack skills, writ
 `harness.json`, and registers it (invariant #4). Harness-*specific* skills live inside the
 harness; generic skills live at the meta root (invariant #3).
 
-### Per-harness layout (canonical example: `harness/veritas-research/`)
+### Per-harness layout
+
+**`harness/veritas-research/`** — pure 8-plane template (generic infrastructure, no domain logic):
 
 ```
 harness/veritas-research/
-  harness.json        manifest — registry identity, planes, capabilities, owned skills
+  harness.json        manifest — registry identity, planes, capabilities=[], skills=[]
   src/llm/            provider abstraction (LLMBackbone, provider + local fallback chain)
   src/config/         typed config, env-var key resolution, redact()
-  src/agent/          the ReAct loop + specialists.ts (loadouts)
+  src/agent/          the ReAct loop + specialists.ts (LoadoutRegistry, no concrete loadouts)
   src/safety/         scope.ts + approval.ts + human-release.ts, composed as index.ts check()
   src/tools/          typed ToolRegistry (name, zod inputSchema, riskTier, run())
   src/parse/          robust JSON extraction from model output
   src/mission/        the Mission object — append-only transcript + findings
   src/evidence/       provenance gate + refuter
   src/orchestration/  ADV-tier decomposition orchestrator (honest decomposition only)
-  src/resources/      lessons.ts, research-plan.ts
-  src/ingest/         sanitize, parse, catalog, fit, validate pipeline
   src/mcp-server.ts   safe scope-gated MCP subset (no safety bypass)
-  scripts/            verify-claims.mjs, verify-finding.mjs, bench.mjs, doctor.mjs, lessons.mjs, veritas-config.mjs
-  skills/             harness-SPECIFIC skills only: harness-ingest/, harness-analysis/
-                      (generic operating skills live at the meta root skills/ — invariant #3)
-  .claude/            commands/, agents/
-  bench/<suite>/      tasks.json + committed oracle.json per suite
-  resources/          lessons.json (committed lesson store)
+  scripts/            doctor.mjs, veritas-config.mjs
+  Dockerfile          multi-stage oven/bun image; docker-compose.yml for local dev
+  PROVIDER.md         operator guide for provider/model selection
+```
+
+**`harness/veritas-example/`** — research domain harness (capabilities: research; skills: ingest, analysis):
+
+```
+harness/veritas-example/
+  harness.json        manifest — capabilities=["research"], skills=[harness-ingest, harness-analysis]
+  src/agent/loadouts.ts   concrete loadouts: codebase-audit, research, web-recon
+  src/ingest/         sanitize, parse, catalog, fit, validate pipeline
+  src/resources/      lessons.ts, research-plan.ts, source-digest.ts, plan-eval.ts
+  src/rsi/            recursive self-improvement loop
+  src/memory/         context-window.ts (ephemeral windowing — domain extension)
+  src/config/dogma.ts research-plan schema validation (domain extension)
+  scripts/            verify-claims.mjs, verify-finding.mjs, bench.mjs, lessons.mjs, analyze.mjs
+  skills/             harness-ingest/, harness-analysis/
+  bench/rsi/          tasks.json + committed oracle.json for RSI benchmark
+  resources/          lessons.json, experience/
   ingest/             NEW.md (gitignored), TEMP.md, examples/
   missions/<slug>/    ingested research-plan.json per research brief
+  Dockerfile          multi-stage oven/bun image; docker-compose.yml with mission/experience volumes
   PROVIDER.md         operator guide for provider/model selection
+  EXAMPLE.md          guided walkthrough: brief → ingest → eval → digest → run → verify
 ```
 
 Above `harness/`, this repo's own `agents/` tree is the meta-harness's operating workspace, not

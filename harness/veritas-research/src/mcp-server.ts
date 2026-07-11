@@ -11,11 +11,20 @@
  *   - mission_status
  *   - execute_scoped_tool (safe/active tiers only, explicit scope required)
  */
+import { z } from "zod";
 import { defaultLoadouts } from "./agent/loadouts.ts";
 import { starterRegistry } from "./tools/index.ts";
 import { createSafetyCheck } from "./safety/index.ts";
 import type { MissionScope } from "./safety/scope.ts";
 import type { MissionStore } from "./control/store.ts";
+
+const MissionScopeSchema = z.object({
+  hosts: z.array(z.string()),
+  paths: z.array(z.string()),
+  allowLoopback: z.boolean().optional(),
+  allowPrivate: z.boolean().optional(),
+  allowShell: z.boolean().optional(),
+});
 
 export interface McpToolSchema {
   name: string;
@@ -116,19 +125,25 @@ export class McpHarnessServer {
 
   private async executeScopedTool(input: Record<string, unknown>): Promise<McpToolResult> {
     const toolName = String(input.tool ?? "");
-    const toolInput = (input.input ?? {}) as Record<string, unknown>;
-    const scope = input.scope as MissionScope | undefined;
 
     if (!SAFE_TOOL_ALLOWLIST.has(toolName)) {
       return { ok: false, content: `MCP ERROR: tool "${toolName}" is not exposed via MCP (safe/active allowlist only)` };
     }
-    if (!scope || !Array.isArray(scope.hosts) || !Array.isArray(scope.paths)) {
-      return { ok: false, content: "MCP ERROR: execute_scoped_tool requires scope { hosts, paths }" };
+
+    const toolInputResult = z.record(z.string(), z.unknown()).safeParse(input.input ?? {});
+    if (!toolInputResult.success) {
+      return { ok: false, content: `MCP ERROR: invalid tool input: ${toolInputResult.error.message}` };
     }
 
+    const scopeResult = MissionScopeSchema.safeParse(input.scope);
+    if (!scopeResult.success) {
+      return { ok: false, content: `MCP ERROR: invalid scope: ${scopeResult.error.message}` };
+    }
+
+    const scope: MissionScope = scopeResult.data;
     const registry = starterRegistry();
     const safetyCheck = createSafetyCheck({ scope });
-    const result = await registry.execute({ name: toolName, input: toolInput }, safetyCheck);
+    const result = await registry.execute({ name: toolName, input: toolInputResult.data }, safetyCheck);
     return { ok: result.ok, content: result.observation };
   }
 }

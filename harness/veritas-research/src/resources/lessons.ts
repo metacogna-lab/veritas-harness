@@ -16,7 +16,7 @@
  * Recording is durable and committed; advisory feedback is opt-in; autonomous
  * self-modification remains gated behind human review (invariant #5).
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { MissionSnapshot } from "../mission/types.ts";
 
@@ -160,17 +160,57 @@ function relevanceScore(query: string, lesson: Lesson): number {
 export class LessonsStore {
   constructor(private readonly path: string) {}
 
+  /**
+   * Read all lessons from the NDJSON log. Each line is a full Lesson; the last
+   * entry for a given id wins (enables O(1) append-based upserts without a
+   * full-file rewrite, eliminating the TOCTOU race under concurrent processes).
+   *
+   * Backward-compat: if the file is a legacy JSON array it is read as-is
+   * (no automatic migration; the next write will start using NDJSON format).
+   */
   private readAll(): Lesson[] {
     if (!existsSync(this.path)) return [];
-    return (JSON.parse(readFileSync(this.path, "utf8")) as Partial<Lesson>[]).map(normalizeLesson);
+    const raw = readFileSync(this.path, "utf8").trim();
+    if (!raw) return [];
+
+    // Legacy JSON-array format
+    if (raw.startsWith("[")) {
+      const parsed: unknown = JSON.parse(raw);
+      if (!Array.isArray(parsed)) throw new Error(`lessons store at ${this.path} is not a JSON array`);
+      return (parsed as Partial<Lesson>[]).map(normalizeLesson);
+    }
+
+    // NDJSON: one JSON object per line, last-wins by id
+    const byId = new Map<string, Lesson>();
+    for (const line of raw.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      const lesson = normalizeLesson(JSON.parse(trimmed) as Partial<Lesson>);
+      byId.set(lesson.id, lesson);
+    }
+    return [...byId.values()];
   }
 
-  private writeAll(lessons: Lesson[]): void {
+  /**
+   * Append a single lesson as one NDJSON line. O(1) — never rewrites the file.
+   * If the file is in legacy JSON-array format, migrates it to NDJSON first.
+   */
+  private appendLesson(lesson: Lesson): void {
     mkdirSync(dirname(this.path), { recursive: true });
-    writeFileSync(this.path, JSON.stringify(lessons, null, 2), "utf8");
+    if (existsSync(this.path)) {
+      const head = readFileSync(this.path, "utf8").trimStart().slice(0, 1);
+      if (head === "[") {
+        // Migrate legacy format: rewrite existing entries as NDJSON, then append
+        const existing = this.readAll().filter((l) => l.id !== lesson.id);
+        const lines = [...existing, lesson].map((l) => JSON.stringify(l)).join("\n") + "\n";
+        writeFileSync(this.path, lines, "utf8");
+        return;
+      }
+    }
+    appendFileSync(this.path, JSON.stringify(lesson) + "\n", "utf8");
   }
 
-  /** Append a lesson (idempotent on lesson id). */
+  /** Append a lesson (idempotent on lesson id — last write wins on readAll). */
   recordLesson(input: LessonInput, now = (): string => new Date().toISOString()): Lesson {
     const lesson: Lesson = {
       id: `lesson-${input.missionId}`,
@@ -185,18 +225,14 @@ export class LessonsStore {
       harmfulnessCount: 0,
       status: "active",
     };
-    const all = this.readAll().filter((l) => l.id !== lesson.id);
-    all.push(lesson);
-    this.writeAll(all);
+    this.appendLesson(lesson);
     return lesson;
   }
 
   /** Record from a mission snapshot using heuristic extraction. */
   recordFromSnapshot(snapshot: MissionSnapshot): Lesson {
     const lesson = lessonFromSnapshot(snapshot);
-    const all = this.readAll().filter((l) => l.id !== lesson.id);
-    all.push(lesson);
-    this.writeAll(all);
+    this.appendLesson(lesson);
     return lesson;
   }
 
@@ -255,9 +291,8 @@ export class LessonsStore {
    */
   markLessonOutcome(id: string, outcome: "helpful" | "harmful"): Lesson | null {
     const all = this.readAll();
-    const idx = all.findIndex((l) => l.id === id);
-    if (idx === -1) return null;
-    const prev = all[idx]!;
+    const prev = all.find((l) => l.id === id);
+    if (!prev) return null;
     const updated: Lesson = {
       ...prev,
       helpfulnessCount: outcome === "helpful" ? prev.helpfulnessCount + 1 : prev.helpfulnessCount,
@@ -268,8 +303,7 @@ export class LessonsStore {
     const shouldDeprecate =
       updated.helpfulnessCount > 0 && updated.harmfulnessCount >= updated.helpfulnessCount * 2;
     const result: Lesson = { ...updated, status: shouldDeprecate ? "deprecated" : updated.status };
-    const next = [...all.slice(0, idx), result, ...all.slice(idx + 1)];
-    this.writeAll(next);
+    this.appendLesson(result);
     return result;
   }
 

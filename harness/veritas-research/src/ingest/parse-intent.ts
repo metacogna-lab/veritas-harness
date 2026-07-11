@@ -1,6 +1,7 @@
 /**
  * Parse research intent from NEW.md — YAML frontmatter plus ## section bodies.
  */
+import { load as yamlLoad } from "js-yaml";
 import { sanitizeIngestText } from "./sanitize.ts";
 
 export interface ParsedIntentFrontmatter {
@@ -29,41 +30,11 @@ export function splitFrontmatter(text: string): { yaml: string; body: string } |
   return { yaml: match[1]!, body: match[2]! };
 }
 
-/** Minimal YAML parser for flat key: value and simple lists. */
+/** Parse YAML frontmatter into a flat record. */
 export function parseSimpleYaml(yaml: string): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  let listKey: string | undefined;
-  const list: string[] = [];
-
-  for (const line of yaml.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-
-    const listItem = trimmed.match(/^-\s+(.+)$/);
-    if (listItem && listKey) {
-      list.push(listItem[1]!.replace(/^["']|["']$/g, ""));
-      continue;
-    }
-
-    if (listKey) {
-      out[listKey] = [...list];
-      listKey = undefined;
-      list.length = 0;
-    }
-
-    const kv = trimmed.match(/^([a-zA-Z0-9_-]+):\s*(.*)$/);
-    if (!kv) continue;
-    const key = kv[1]!;
-    const value = kv[2]!.replace(/^["']|["']$/g, "");
-    if (value === "") {
-      listKey = key;
-      continue;
-    }
-    out[key] = value;
-  }
-
-  if (listKey) out[listKey] = [...list];
-  return out;
+  const parsed = yamlLoad(yaml);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+  return parsed as Record<string, unknown>;
 }
 
 /** Extract ## heading sections into a map keyed by lowercased heading name. */

@@ -58,7 +58,8 @@ describe("lessons", () => {
     expect(hits.length).toBe(1);
     expect(hits[0]!.missionId).toBe("m-1");
     expect(existsSync(path)).toBe(true);
-    const onDisk = JSON.parse(readFileSync(path, "utf8")) as Lesson[];
+    // File is NDJSON: one JSON object per line
+    const onDisk = readFileSync(path, "utf8").trim().split("\n").map((l) => JSON.parse(l) as Lesson);
     expect(onDisk).toHaveLength(2);
   });
 

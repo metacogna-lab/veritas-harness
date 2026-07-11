@@ -37,7 +37,8 @@ function readConfigFile(path: string): RawConfigFile {
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8"));
     return typeof parsed === "object" && parsed !== null ? (parsed as RawConfigFile) : {};
-  } catch {
+  } catch (err) {
+    process.stderr.write(`config: warn — ${path} contains invalid JSON, falling back to defaults (${(err as Error).message})\n`);
     return {};
   }
 }

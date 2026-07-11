@@ -10,6 +10,31 @@ import type { ProviderConfig } from "../config/index.ts";
 import type { CompletionRequest, Transport, TransportResponse, ToolCall } from "./types.ts";
 import { cliTransport, isCliProvider } from "./cli-transport.ts";
 
+interface AnthropicContentBlock {
+  type: string;
+  text?: string;
+  name?: string;
+  input?: Record<string, unknown>;
+}
+
+interface AnthropicResponse {
+  content: AnthropicContentBlock[];
+  usage?: { input_tokens?: number; output_tokens?: number };
+}
+
+interface OpenAIToolCall {
+  function?: { name?: string; arguments?: unknown };
+}
+
+interface OpenAIChoice {
+  message?: { content?: string | null; tool_calls?: OpenAIToolCall[] };
+}
+
+interface OpenAIResponse {
+  choices?: OpenAIChoice[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+}
+
 function requireKey(cfg: ProviderConfig): string {
   if (!cfg.apiKey) {
     throw new Error(
@@ -51,12 +76,15 @@ const anthropicTransport: Transport = async (cfg, req, signal): Promise<Transpor
     signal,
   });
   if (!res.ok) throw new Error(`anthropic HTTP ${res.status}: ${await res.text()}`);
-  const json = (await res.json()) as any;
+  const json = (await res.json()) as AnthropicResponse;
+  if (!Array.isArray(json.content)) {
+    throw new Error(`anthropic: unexpected response shape — content is not an array: ${JSON.stringify(json).slice(0, 200)}`);
+  }
   let text = "";
   const toolCalls: ToolCall[] = [];
-  for (const block of json.content ?? []) {
-    if (block.type === "text") text += block.text;
-    else if (block.type === "tool_use") toolCalls.push({ name: block.name, input: block.input ?? {} });
+  for (const block of json.content) {
+    if (block.type === "text") text += block.text ?? "";
+    else if (block.type === "tool_use") toolCalls.push({ name: block.name ?? "", input: block.input ?? {} });
   }
   return {
     text,
@@ -96,14 +124,14 @@ const openaiCompatibleTransport: Transport = async (cfg, req, signal): Promise<T
     signal,
   });
   if (!res.ok) throw new Error(`${cfg.provider} HTTP ${res.status}: ${await res.text()}`);
-  const json = (await res.json()) as any;
-  const choice = json.choices?.[0]?.message ?? {};
-  const toolCalls: ToolCall[] = (choice.tool_calls ?? []).map((tc: any) => ({
-    name: tc.function?.name,
+  const json = (await res.json()) as OpenAIResponse;
+  const message = json.choices?.[0]?.message ?? {};
+  const toolCalls: ToolCall[] = (message.tool_calls ?? []).map((tc) => ({
+    name: tc.function?.name ?? "",
     input: safeArgs(tc.function?.arguments),
   }));
   return {
-    text: choice.content ?? "",
+    text: message.content ?? "",
     nativeToolCalls: toolCalls.length > 0 ? toolCalls : undefined,
     usage: {
       inputTokens: json.usage?.prompt_tokens ?? 0,

@@ -15,3 +15,6 @@ logs
 
 # generated source summaries (produced by bun run digest / bun run dev digest)
 resources/summary/
+
+# candidate bench results (transient evaluation artifacts, not committed baseline)
+bench/*/candidate-results.json

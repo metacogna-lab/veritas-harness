@@ -10,7 +10,7 @@
  */
 import { requireHumanRelease, type HumanReleasePolicy, HumanReleaseSession } from "../safety/human-release.ts";
 import type { ScopeDecision } from "../safety/scope.ts";
-import type { HarnessEditProposal, ValidationResult, FailurePattern, HumanReviewPacket } from "./types.ts";
+import type { HarnessEditProposal, ValidationResult, FailurePattern, HumanReviewPacket, CandidateEvalResult } from "./types.ts";
 
 export interface ApplyOutcome {
   /** True only if a human explicitly released the edit for a human to apply. */
@@ -23,14 +23,20 @@ function buildPacket(
   proposal: HarnessEditProposal,
   validation: ValidationResult,
   pattern: FailurePattern,
+  candidateEvalResult?: CandidateEvalResult,
 ): HumanReviewPacket {
+  const candidateNote =
+    candidateEvalResult
+      ? ` Candidate bench eval: ${candidateEvalResult.decision.toUpperCase()} (${candidateEvalResult.rationale}).`
+      : "";
   return {
     proposal,
     validation,
     pattern,
+    candidateEvalResult,
     instructions:
       `Review the diff for ${proposal.targetPath}. It targets failure pattern ` +
-      `"${pattern.signature}" and passed held-in + held-out validation. If you approve, ` +
+      `"${pattern.signature}" and passed held-in + held-out validation.${candidateNote} If you approve, ` +
       `apply the diff on a branch yourself and re-run the full suite — the harness will ` +
       `not apply it for you.`,
   };
@@ -48,8 +54,22 @@ export async function applyProposal(args: {
   pattern: FailurePattern;
   policy?: HumanReleasePolicy;
   session?: HumanReleaseSession;
+  /** Optional candidate bench evaluation result to surface to the human reviewer. */
+  candidateEvalResult?: CandidateEvalResult;
 }): Promise<ApplyOutcome> {
-  const packet = buildPacket(args.proposal, args.validation, args.pattern);
+  const packet = buildPacket(args.proposal, args.validation, args.pattern, args.candidateEvalResult);
+
+  // If candidate eval explicitly rejects, flag the packet but still surface it to the human.
+  if (args.candidateEvalResult?.decision === "reject" && args.validation.eligible) {
+    return {
+      released: false,
+      decision: {
+        allowed: false,
+        reason: `RSI: candidate bench eval REJECTED — ${args.candidateEvalResult.rationale}`,
+      },
+      packet,
+    };
+  }
 
   if (!args.validation.eligible) {
     return {

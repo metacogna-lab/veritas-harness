@@ -69,10 +69,26 @@ export interface ValidationResult {
   detail: string;
 }
 
+/** Outcome of running the bench suite against a candidate harness edit. */
+export interface CandidateEvalResult {
+  /** The suite that was evaluated. */
+  suite: string;
+  /** Overall promotion decision from the candidate run. */
+  decision: "promote" | "hold" | "reject";
+  /** Scores from the candidate run (parallel to bench results.json summary). */
+  candidateScores: { black_box: number; white_box: number };
+  /** Scores from the committed baseline results.json. */
+  baselineScores: { black_box: number; white_box: number };
+  /** Human-readable rationale for the decision. */
+  rationale: string;
+}
+
 /** What a human reviews before deciding to apply an edit. Emitted; never auto-applied. */
 export interface HumanReviewPacket {
   proposal: HarnessEditProposal;
   validation: ValidationResult;
   pattern: FailurePattern;
   instructions: string;
+  /** Present when a candidate bench eval was run before surfacing this packet. */
+  candidateEvalResult?: CandidateEvalResult;
 }

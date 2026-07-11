@@ -12,6 +12,7 @@
     "verify-claims": "bun scripts/verify-claims.mjs",
     "verify-finding": "bun scripts/verify-finding.mjs",
     "bench": "bun scripts/bench.mjs",
+    "verify-harness-candidate": "bun scripts/verify-harness-candidate.mjs",
     "lessons": "bun scripts/lessons.mjs",
     "ingest": "tsx src/cli.ts ingest",
     "veritas-config": "bun scripts/veritas-config.mjs",

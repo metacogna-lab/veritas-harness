@@ -21,6 +21,40 @@ import { fileURLToPath } from "node:url";
 import { passAtOne, wilson95, round } from "./lib/stats.mjs";
 import { antiFittingGuard } from "../src/bench/guard.ts";
 
+// ── candidate decision logic ──────────────────────────────────────────────────
+
+const REJECT_THRESHOLD = 0.05; // drop > 5pp on any metric → reject
+
+/**
+ * Compare candidate pass@1 scores to baseline and emit a promotion decision.
+ * - promote: candidate ≥ baseline on BOTH black-box AND white-box
+ * - reject:  candidate drops > REJECT_THRESHOLD on any metric
+ * - hold:    mild regression (≤ threshold) — not enough to auto-reject
+ */
+function decideCandidatePromotion(candidate, baseline) {
+  const blackDrop = baseline.black_box - candidate.black_box;
+  const whiteDrop = baseline.white_box - candidate.white_box;
+
+  if (blackDrop > REJECT_THRESHOLD || whiteDrop > REJECT_THRESHOLD) {
+    return {
+      decision: "reject",
+      rationale:
+        `black-box drop ${round(blackDrop * 100)}pp, white-box drop ${round(whiteDrop * 100)}pp ` +
+        `(threshold: ${REJECT_THRESHOLD * 100}pp)`,
+    };
+  }
+  if (blackDrop > 0 || whiteDrop > 0) {
+    return {
+      decision: "hold",
+      rationale: `mild regression — black-box Δ${round(-blackDrop * 100)}pp, white-box Δ${round(-whiteDrop * 100)}pp. Human review recommended.`,
+    };
+  }
+  return {
+    decision: "promote",
+    rationale: `no regression — black-box ${round(candidate.black_box * 100)}%, white-box ${round(candidate.white_box * 100)}%`,
+  };
+}
+
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const BENCH_DIR = join(ROOT, "bench");
 const readJSON = (p) => JSON.parse(readFileSync(p, "utf8"));
@@ -81,14 +115,100 @@ async function runSuite(suite) {
   return results;
 }
 
+/**
+ * Run a suite in candidate mode: compare fresh run against committed baseline.
+ * Writes bench/<suite>/candidate-results.json (gitignored) and returns the decision.
+ */
+async function runSuiteCandidate(suite, candidatePath) {
+  const dir = join(BENCH_DIR, suite);
+  const baselinePath = join(dir, "results.json");
+  if (!existsSync(baselinePath)) {
+    throw new Error(`No committed baseline results.json for suite "${suite}". Run bun run bench first.`);
+  }
+  const baseline = readJSON(baselinePath);
+
+  // Inject candidate config path via env so solvers can optionally read it.
+  process.env.HARNESS_CANDIDATE_CONFIG = candidatePath;
+  let fresh;
+  try {
+    fresh = await runSuite(suite);
+  } finally {
+    delete process.env.HARNESS_CANDIDATE_CONFIG;
+  }
+
+  const candidateScores = {
+    black_box: fresh.summary.black_box.pass_at_1,
+    white_box: fresh.summary.white_box.pass_at_1,
+  };
+  const baselineScores = {
+    black_box: baseline.summary.black_box.pass_at_1,
+    white_box: baseline.summary.white_box.pass_at_1,
+  };
+  const { decision, rationale } = decideCandidatePromotion(candidateScores, baselineScores);
+
+  const candidateResults = {
+    suite,
+    candidatePath,
+    evaluatedAt: new Date().toISOString(),
+    decision,
+    rationale,
+    candidateScores,
+    baselineScores,
+    outcomes: fresh.outcomes,
+  };
+  writeFileSync(join(dir, "candidate-results.json"), JSON.stringify(candidateResults, null, 2), "utf8");
+  return candidateResults;
+}
+
 async function main() {
-  const only = process.argv[2];
+  const args = process.argv.slice(2);
+
+  // Parse --candidate <path> and optional suite name.
+  let candidatePath = null;
+  const filteredArgs = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--candidate" && args[i + 1]) {
+      candidatePath = args[++i];
+    } else {
+      filteredArgs.push(args[i]);
+    }
+  }
+
+  const only = filteredArgs[0];
   const suites = only ? [only] : listSuites();
   if (suites.length === 0) {
     console.log("bench: no suites found under bench/. Nothing to run.");
     return 0;
   }
 
+  // Candidate mode: evaluate each suite against the committed baseline.
+  if (candidatePath) {
+    console.log(`bench: candidate mode — comparing against committed baseline (candidate: ${candidatePath})`);
+    let anyReject = false;
+    for (const suite of suites) {
+      try {
+        const r = await runSuiteCandidate(suite, candidatePath);
+        const icon = r.decision === "promote" ? "✅" : r.decision === "hold" ? "⚠️" : "❌";
+        console.log(`\n=== ${suite} (candidate) ===`);
+        console.log(`  ${icon} ${r.decision.toUpperCase()}: ${r.rationale}`);
+        console.log(`  baseline  black=${r.baselineScores.black_box}  white=${r.baselineScores.white_box}`);
+        console.log(`  candidate black=${r.candidateScores.black_box}  white=${r.candidateScores.white_box}`);
+        console.log(`  wrote bench/${suite}/candidate-results.json`);
+        if (r.decision === "reject") anyReject = true;
+      } catch (err) {
+        console.error(`\n=== ${suite} === CANDIDATE FAILED: ${err.message}`);
+        anyReject = true;
+      }
+    }
+    if (anyReject) {
+      console.error("\nbench: candidate REJECTED — one or more suites regressed.");
+      return 1;
+    }
+    console.log("\nbench: candidate evaluated successfully.");
+    return 0;
+  }
+
+  // Normal mode.
   let failed = 0;
   for (const suite of suites) {
     try {

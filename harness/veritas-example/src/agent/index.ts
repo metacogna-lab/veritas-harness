@@ -16,7 +16,7 @@
  */
 import { EventEmitter } from "eventemitter3";
 import type { LLMBackbone } from "../llm/index.ts";
-import type { CompletionRequest, Message } from "../llm/types.ts";
+import type { ILLMBackbone, CompletionRequest, Message } from "../llm/types.ts";
 import type { ToolRegistry, SafetyCheck } from "../tools/registry.ts";
 import type { Mission } from "../mission/index.ts";
 import { checkScope } from "../safety/scope.ts";
@@ -43,7 +43,7 @@ export interface AgentEvents {
 }
 
 export interface AgentOptions {
-  llm: LLMBackbone;
+  llm: ILLMBackbone;
   registry: ToolRegistry;
   /** System prompt. Optional if `specialist` is given (its prompt is used). */
   systemPrompt?: string;
@@ -61,7 +61,7 @@ export interface AgentOptions {
 }
 
 export class Agent extends EventEmitter<AgentEvents> {
-  private readonly llm: LLMBackbone;
+  private readonly llm: ILLMBackbone;
   private readonly registry: ToolRegistry;
   private readonly systemPrompt: string;
   readonly mission: Mission;

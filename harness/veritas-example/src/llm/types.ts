@@ -42,6 +42,11 @@ export interface CompletionResult {
   usage: TokenUsage;
 }
 
+/** Structural interface satisfied by LLMBackbone and test doubles. */
+export interface ILLMBackbone {
+  complete(request: CompletionRequest, signal?: AbortSignal): Promise<CompletionResult>;
+}
+
 /**
  * A transport performs ONE raw call to a specific provider. It knows nothing
  * about retries, fallback, or the text-mode shim — those live in LLMBackbone.

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { ApiIngestSuccess, DimensionResult } from "@/lib/veritas/types";
+import type { ApiIngestSuccess, DimensionResult } from "@core/types";
 
 function DimensionRow({ dim }: { dim: DimensionResult }) {
   const icon = dim.pass ? "✓" : dim.required ? "✗" : "⚠";

@@ -14,10 +14,14 @@
     "jsx": "preserve",
     "incremental": true,
     "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@core/*": ["../core/*"],
+      "@anthropic-ai/sdk": ["./node_modules/@anthropic-ai/sdk"],
+      "@anthropic-ai/sdk/*": ["./node_modules/@anthropic-ai/sdk/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../core/**/*.ts"],
   "exclude": ["node_modules"]
 }

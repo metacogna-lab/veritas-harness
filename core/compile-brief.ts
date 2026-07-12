@@ -1,12 +1,15 @@
 /**
- * Server-side research plan compiler.
+ * Server-side research plan compiler — repo-level abstraction.
+ *
  * Mirrors harness/veritas-example/src/ingest/fit-intent.ts but uses
- * @anthropic-ai/sdk directly (Node.js compatible, no Bun-specific APIs).
+ * @anthropic-ai/sdk directly (Node.js compatible; no Bun-specific APIs,
+ * no harness FS dependencies). Bundled by Next.js from app/node_modules.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { researchPlanSchema, INGEST_VERSION } from "@/lib/veritas/schema";
-import { parseLastObject } from "@/lib/extract-json";
-import type { MissionPayload, ResearchPlan } from "@/lib/veritas/types";
+import { researchPlanSchema } from "./schema";
+import { parseLastObject } from "./extract-json";
+import type { MissionPayload } from "./types";
+import type { ResearchPlan } from "./schema";
 
 const SYSTEM_PROMPT = `You are a research plan compiler for the Veritas meta-harness.
 Convert the user's research intention into a valid JSON research-plan.
@@ -63,11 +66,16 @@ function buildPrompt(
   ];
 
   if (payload.fileContent) {
-    parts.push(`## Supplementary context (from uploaded file: ${payload.fileName ?? "file"})\n\n${payload.fileContent.slice(0, 8000)}`);
+    parts.push(
+      `## Supplementary context (from uploaded file: ${payload.fileName ?? "file"})\n\n` +
+        payload.fileContent.slice(0, 8000),
+    );
   }
 
   if (validationErrors) {
-    parts.push("## Validation errors from previous attempt — fix all of these\n\n" + validationErrors);
+    parts.push(
+      "## Validation errors from previous attempt — fix all of these\n\n" + validationErrors,
+    );
   }
 
   parts.push(
@@ -92,10 +100,7 @@ function formatZodErrors(error: unknown): string {
 }
 
 export async function serverCompileBrief(payload: MissionPayload): Promise<ResearchPlan> {
-  const client = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY,
-  });
-
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const model = process.env.VERITAS_MODEL ?? "claude-sonnet-4-6";
   const maxRetries = 2;
   let lastError = "unknown error";
@@ -117,15 +122,10 @@ export async function serverCompileBrief(payload: MissionPayload): Promise<Resea
       .join("");
 
     const obj = parseLastObject(text);
-    if (!obj) {
-      lastError = "no JSON object found in model output";
-      continue;
-    }
+    if (!obj) { lastError = "no JSON object found in model output"; continue; }
 
     const parsed = researchPlanSchema.safeParse(obj);
-    if (parsed.success) {
-      return parsed.data;
-    }
+    if (parsed.success) return parsed.data;
 
     lastError = formatZodErrors(parsed.error);
   }

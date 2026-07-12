@@ -7,9 +7,9 @@
  */
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { serverCompileBrief } from "@/lib/compile-brief";
-import { evalPlanWithConfig } from "@/lib/veritas/eval";
-import type { ApiIngestResult } from "@/lib/veritas/types";
+import { serverCompileBrief } from "@core/compile-brief";
+import { evalPlanWithConfig } from "@core/eval";
+import type { ApiIngestResult } from "@core/types";
 
 const payloadSchema = z.object({
   slug: z

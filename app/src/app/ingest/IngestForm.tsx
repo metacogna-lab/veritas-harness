@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import type { ApiIngestResult, DimensionResult } from "@/lib/veritas/types";
+import type { ApiIngestResult, DimensionResult } from "@core/types";
 
 const LOADOUTS = [
   { value: "research", label: "research — structured missions from an ingested plan" },

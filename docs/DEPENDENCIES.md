@@ -1,7 +1,15 @@
 # External Library Dependencies — Research-Driven Analysis
 
-**Date:** 2026-07-12  
+**Date:** 2026-07-12
 **Source:** Research corpus (8 papers, 2025–2026) × current architecture
+
+> **STATUS (veritas-v0.2 H-2):** Every dependency below is **PLANNED** (Phase 2/3/4). None are
+> installed yet. The `src/...` paths are **proposed targets**, not existing files. Two corrections
+> to earlier drafts of this doc: the RSI implementation already exists at **`src/rsi/`** (not
+> `src/self-improve/`), and the experience store already exists at
+> **`src/mission/experience-store.ts`** (not `src/experience/`). Where a row below names
+> `src/self-improve/*` or `src/experience/*`, read it as "the planned home for this dependency,
+> which will integrate with the existing `src/rsi/` and `src/mission/experience-store.ts`."
 
 ---
 

@@ -1,7 +1,14 @@
 # APP_PLAN — Hypothesis Validation & Clean CLI/App Architecture
 
-**Authored:** 2026-07-12  
-**Status:** Design — pending implementation
+**Authored:** 2026-07-12
+**Status:** Design — Phase 1 implemented
+
+> **UPDATE (veritas-v0.2 L-1):** The `app/src/lib/veritas/` layout described below (schema/dogma/eval
+> **copied into the app**, "Copied, Not Imported", manual sync policy) is **historical**. On
+> 2026-07-12 those files were moved to the repo-level [`core/`](../core/README.md) package and the app
+> now imports them via the `@core/*` alias. The manual sync policy is replaced by an enforceable
+> drift-guard test (`harness/veritas-example/src/ingest/contract-drift.test.ts`). See
+> `docs/veritas-v0.2.md` C-1/M-3 and `docs/CURRENT_IMPLEMENTATION-2026-07-12.md` for the current shape.
 
 ---
 

@@ -116,6 +116,23 @@ export class ControlPlane {
   }
 
   async start(opts: StartOptions): Promise<StartResult> {
+    // Interface guard (v0.2 M-1): when a plan is supplied it is authoritative for
+    // mission identity. Explicit objective/target that CONTRADICT the plan are a
+    // caller error, not a silent override; consistent duplicates (as the CLI passes)
+    // are fine. `loadout`/`role` remain intentional overrides. See PHASE2 B3 for the
+    // discriminated-union end-state that makes this a type-level guarantee.
+    if (opts.plan) {
+      const conflicts: string[] = [];
+      if (opts.objective !== undefined && opts.objective !== opts.plan.objective) conflicts.push("objective");
+      if (opts.target !== undefined && opts.target !== opts.plan.target) conflicts.push("target");
+      if (conflicts.length > 0) {
+        throw new Error(
+          `start: explicit ${conflicts.join(" and ")} contradict(s) the research plan — ` +
+            `pass a plan OR explicit fields, not conflicting values`,
+        );
+      }
+    }
+
     const mapped = opts.plan ? planToStartOptions(opts.plan) : undefined;
     const objective = mapped?.objective ?? opts.objective;
     const target = mapped?.target ?? opts.target;
@@ -183,6 +200,24 @@ export class ControlPlane {
 
     const result = await agent.run();
 
+    const snapshot = await this.finalize(mission, loadout, scope, emit);
+
+    emit(`mission ${mission.id} ${result.status}`);
+    return { id: mission.id, result, snapshot };
+  }
+
+  /**
+   * Post-run finalization (v0.2 M-2 — extracted from start() to lower the control
+   * plane's coupling): refute every proposed finding (invariant #4), persist the
+   * snapshot, and archive an experience entry for the RSI outer loop. Behaviour is
+   * identical to the previous inline block; only the boundary is named.
+   */
+  private async finalize(
+    mission: Mission,
+    loadout: Loadout,
+    scope: MissionScope,
+    emit: (line: string) => void,
+  ): Promise<MissionSnapshot> {
     // Refute before confirm (invariant #4): every proposed finding must survive
     // the refuter before it is reported as confirmed.
     if (this.refuterLLM) {
@@ -210,8 +245,7 @@ export class ControlPlane {
       emit(`experience-store: warn — could not write entry for ${mission.id}`);
     }
 
-    emit(`mission ${mission.id} ${result.status}`);
-    return { id: mission.id, result, snapshot };
+    return snapshot;
   }
 
   status(id: string): MissionStatus | undefined {

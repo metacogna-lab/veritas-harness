@@ -548,6 +548,11 @@ python modal/status.py --slug my-mission
 
 ## 8. Observability Stack (Phase 2)
 
+> **STATUS (veritas-v0.2 H-2/M-4): PLANNED — `src/telemetry/` is not yet built.** The event union,
+> NDJSON log format, and env vars below are a design contract, not shipped code. This is the
+> inner→outer interface the RSI engine consumes; it is the first build target of the 0.2
+> telemetry workstream (`agents/plans/PHASE2.md` B5).
+
 Structured, machine-readable telemetry for RSI loop mining, cross-mission analytics, live UI progress, and optional OTLP export.
 
 ### 8.1 Architecture
@@ -794,10 +799,10 @@ harness/veritas-example/
 | `HARNESS_MODEL` | from config | Override model for active provider |
 | `VERITAS_RUNS_DIR` | `.veritas/runs` | Mission run artifact location |
 | `NO_COLOR` | — | Suppress ANSI colour in banner |
-| `LOG_LEVEL` | `info` | Telemetry log level: `debug`, `info`, `warn`, `error` |
-| `LOG_FILE` | auto | Override NDJSON log path |
-| `LOG_STDOUT` | `false` | Mirror log lines to stdout |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | — | Enable OpenTelemetry trace export |
+| `LOG_LEVEL` | `info` | Telemetry log level: `debug`, `info`, `warn`, `error` *(planned — telemetry stack not yet built, see §8)* |
+| `LOG_FILE` | auto | Override NDJSON log path *(planned)* |
+| `LOG_STDOUT` | `false` | Mirror log lines to stdout *(planned)* |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | — | Enable OpenTelemetry trace export *(planned)* |
 | `VERITAS_MODEL` | `claude-sonnet-4-6` | Model used by the web app (`app/`) |
 | `OPENAI_API_KEY` | — | Required only if `HARNESS_PROVIDER=openai` |
 | `OPENROUTER_API_KEY` | — | Required only if `HARNESS_PROVIDER=openrouter` |

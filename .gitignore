@@ -19,3 +19,4 @@ research/raw/*.pdf
 
 # RSI experience store (runtime mission artifacts, generated per run)
 harness/veritas-research/resources/experience/*/agents/plans
+harness/veritas-example/resources/experience/

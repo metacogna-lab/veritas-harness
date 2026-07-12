@@ -164,6 +164,14 @@ The CLI already reads `VERITAS_RUNS_DIR` from environment (`src/cli.ts:30`). All
 
 ## Approach B — Modal (Serverless / Scheduled Runs)
 
+> **SUPERSEDED (veritas-v0.2 H-3):** The canonical Modal design is
+> [`OPERATIONS_PLAN.md §7`](./OPERATIONS_PLAN.md#7--phase-2--modal-execution-in-development) /
+> [`PHASE2_MODAL_EXECUTION.md`](./PHASE2_MODAL_EXECUTION.md): `modal/runner.py`, image via
+> `Image.from_dockerfile(...)` (reusing the committed harness Dockerfile — DRY with Approach A),
+> function `harness_run(plan_path)`. The `modal_app.py` / `debian_slim` / `run_mission(objective,
+> target)` sketch below is an **earlier, incompatible draft kept for reference only** — do not build
+> from it. **PLANNED, not yet implemented.**
+
 **Best for:** scheduled research runs (daily/weekly), cost-optimized batch missions, no infrastructure to maintain.
 
 **Tradeoff vs Docker:** Modal has a 5–10 s cold start; no long-running process cost. Docker has consistent warm latency but requires a host. For missions that run once and produce a report, Modal wins on cost and ops overhead.

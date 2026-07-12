@@ -89,18 +89,28 @@ describe("ControlPlane lifecycle", () => {
 
   test("start with research plan uses plan objective and records plan note", async () => {
     const store = await tmpStore();
-    const dir = await mkdtemp(join(tmpdir(), "veritas-code-"));
     const planPath = join(import.meta.dir, "../../missions/example-slug/research-plan.json");
     const plan = loadResearchPlan(planPath);
     const llm = scriptedLLM([{ text: "Research complete per plan.", usage: zero }]);
     const plane = new ControlPlane({ llm, store });
-    // Example fixture plan has minimal phases/criteria; skip gates for this unit test.
-    const { id } = await plane.start({ plan, target: dir, skipPlanEval: true, skipDigest: true });
+    // The plan is authoritative (v0.2 M-1); target/objective come from the plan,
+    // not from conflicting explicit fields. Skip gates for this minimal fixture.
+    const { id } = await plane.start({ plan, skipPlanEval: true, skipDigest: true });
     const snap = store.load(id)!;
     expect(snap.objective).toBe(plan.objective);
     expect(snap.scope.paths).toContain("bench/scope-gate");
     const note = snap.transcript.find((e) => e.kind === "note");
     expect(note?.content).toContain("example-slug");
+  });
+
+  test("start rejects an explicit objective that contradicts the plan (M-1)", async () => {
+    const store = await tmpStore();
+    const planPath = join(import.meta.dir, "../../missions/example-slug/research-plan.json");
+    const plan = loadResearchPlan(planPath);
+    const plane = new ControlPlane({ llm: scriptedLLM([{ text: "x", usage: zero }]), store });
+    await expect(
+      plane.start({ plan, objective: "a totally different objective", skipPlanEval: true, skipDigest: true }),
+    ).rejects.toThrow("contradict");
   });
 
   test("error path: an LLM failure marks the mission status error", async () => {

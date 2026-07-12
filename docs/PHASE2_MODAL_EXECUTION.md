@@ -1,6 +1,13 @@
 # Phase 2 — Harness Execution in Modal Sandboxes
 
-## Status: PLAN (post-MVP)
+## Status: PLAN (post-MVP) — **NOT YET IMPLEMENTED**
+
+> **Canonical Modal design (veritas-v0.2 H-3).** This document — together with the identical
+> `OPERATIONS_PLAN.md §7` — is the single source of truth for Modal execution: entry `modal/runner.py`,
+> image via `Image.from_dockerfile(...)`, function `harness_run(plan_path)`. The Modal sketch in
+> `STATIC_DEPLOYMENT.md` (Approach B) is a superseded earlier draft. No `modal/` code exists yet;
+> build only after the v0.2 consolidation workstreams land (see `agents/plans/PHASE2.md`). Note: this
+> file is about Modal; `agents/plans/PHASE2.md` is the (distinct) interface-boundary plan for 0.2.
 
 ## Context
 

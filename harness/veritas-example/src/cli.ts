@@ -26,6 +26,7 @@ import { evalPlanWithConfig, renderEvalReport } from "./resources/plan-eval.ts";
 import { rsiDryRun } from "./rsi/dry-run.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { printBanner } from "./banner.ts";
 
 const RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 
@@ -63,6 +64,7 @@ function print(line: string): void {
 
 async function main(): Promise<number> {
   const [verb, ...rest] = process.argv.slice(2);
+  if (process.stdout.isTTY) printBanner();
   const store = new MissionStore(RUNS_DIR);
 
   if (verb === "loadouts") {

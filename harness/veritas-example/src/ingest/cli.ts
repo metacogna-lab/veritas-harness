@@ -17,6 +17,7 @@ import { runIngest } from "./ingest.ts";
 import { dirIngest } from "./dir-scanner.ts";
 import { interviewIngest } from "./interview.ts";
 import { evalPlanWithConfig } from "../resources/plan-eval.ts";
+import { printBanner } from "../banner.ts";
 import type { ResearchPlan } from "./schema.ts";
 
 const HELP = `
@@ -78,6 +79,7 @@ async function main(): Promise<void> {
   });
 
   if (values.help) {
+    printBanner();
     process.stdout.write(HELP + "\n");
     process.exit(0);
   }
@@ -141,6 +143,7 @@ async function main(): Promise<void> {
 
     } else if (forceInteractive || isTTY) {
       // ── Interactive interview ─────────────────────────────────────────────
+      printBanner();
       const result = await interviewIngest({
         prefill: {
           slug: values.slug,

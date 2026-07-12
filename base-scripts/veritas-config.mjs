@@ -1,17 +1,19 @@
 #!/usr/bin/env bun
 /**
  * Interactive harness config wizard — writes src/config/local.json.
+ * Run via `bun run veritas-config` from any harness directory.
  *
  *   bun run veritas-config
  */
 import { createInterface } from "node:readline/promises";
 import { writeFileSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import { listProviders, getProviderDef } from "../src/config/providers.ts";
+import { join } from "node:path";
 
-const CONFIG_DIR = join(dirname(fileURLToPath(import.meta.url)), "../src/config");
+const root = process.cwd();
+const CONFIG_DIR = join(root, "src/config");
 const OUTPUT = join(CONFIG_DIR, "local.json");
+
+const { listProviders, getProviderDef } = await import(join(root, "src/config/providers.ts"));
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 

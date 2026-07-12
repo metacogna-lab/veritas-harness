@@ -8,8 +8,8 @@
     "dev": "tsx src/cli.ts",
     "build": "tsc",
     "test": "bun test",
-    "doctor": "bun scripts/doctor.mjs",
-    "veritas-config": "bun scripts/veritas-config.mjs"
+    "doctor": "bun ../../base-scripts/doctor.mjs",
+    "veritas-config": "bun ../../base-scripts/veritas-config.mjs"
   },
   "dependencies": {
     "eventemitter3": "^5.0.4",

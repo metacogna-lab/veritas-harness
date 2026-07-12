@@ -8,14 +8,14 @@
     "dev": "tsx src/cli.ts",
     "build": "tsc",
     "test": "bun test",
-    "doctor": "bun scripts/doctor.mjs",
+    "doctor": "bun ../../base-scripts/doctor.mjs",
     "verify-claims": "bun scripts/verify-claims.mjs",
     "verify-finding": "bun scripts/verify-finding.mjs",
     "bench": "bun scripts/bench.mjs",
     "verify-harness-candidate": "bun scripts/verify-harness-candidate.mjs",
     "lessons": "bun scripts/lessons.mjs",
     "ingest": "tsx src/ingest/cli.ts",
-    "veritas-config": "bun scripts/veritas-config.mjs",
+    "veritas-config": "bun ../../base-scripts/veritas-config.mjs",
     "analyze": "bun scripts/analyze.mjs"
   },
   "dependencies": {

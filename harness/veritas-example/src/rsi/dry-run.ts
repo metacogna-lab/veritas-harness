@@ -10,7 +10,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { runRsi, summarizeRun } from "./run.ts";
 import type { Proposer } from "./proposal.ts";
-import type { FailureObservation, RegressionSuite, EditableSurface } from "./types.ts";
+import type { FailureObservation, RegressionSuite } from "./types.ts";
+import { DEFAULT_EDITABLE_SURFACES } from "./editable-surfaces.ts";
 
 const FIXTURES = join(import.meta.dir, "fixtures");
 
@@ -27,7 +28,9 @@ const placeholderProposer: Proposer = async (ctx) => ({
 export async function rsiDryRun(): Promise<string> {
   const failures = JSON.parse(readFileSync(join(FIXTURES, "failures.json"), "utf8")) as FailureObservation[];
   const suite = JSON.parse(readFileSync(join(FIXTURES, "suite.json"), "utf8")) as RegressionSuite;
-  const editableSurfaces: EditableSurface[] = [{ path: "src/safety/scope.ts", rationale: "scope decisions live here" }];
+  // Harness-local surfaces + repo-shared base-scripts (H-5). base-scripts edits carry a
+  // larger blast radius and remain human-gated at the apply stage.
+  const editableSurfaces = DEFAULT_EDITABLE_SURFACES;
 
   const result = await runRsi({
     failures,

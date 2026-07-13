@@ -1,6 +1,6 @@
 # Veritas 0.2 — Architecture Review, Fix Plan & Implementation Status
 
-**Reviewed / revised:** 2026-07-12 (rev 2 — now an actionable plan with shipped status, not just a register).
+**Reviewed / revised:** 2026-07-13 (rev 3 — staged workstreams now landed: C-2 unify, H-1, H-4, H-5 + telemetry W4).
 **Scope:** Full architecture via `docs/`, `agents/plans/`, and source under `harness/`, `core/`, `app/`, `base-scripts/`, `meta/`.
 **Method:** zoom-simplify L1→L4 (survey via `metrics.mjs`; assessment against real files).
 **Companion:** boundary redesign in [`agents/plans/PHASE2.md`](../agents/plans/PHASE2.md).
@@ -19,41 +19,44 @@ Legend: ✅ landed & tested · 🟡 staged (spec below; net-new subsystem or blo
 | ID | Severity | Concern | Status | What changed / why staged |
 |----|----------|---------|--------|---------------------------|
 | C-1 | CRITICAL | Data model duplicated, unguarded | ✅ | drift-guard test locks `core/` ↔ harness (dogma id+required, schema fields); `core/README.md` documents vendoring |
-| C-2 | CRITICAL | Two ingest compilers | ✅ guard · 🟡 unify | drift-guard asserts UNTRUSTED-DATA + JSON-only in both; full single-compiler unification staged (cross-runtime LLM interface) |
+| C-2 | CRITICAL | Two ingest compilers | ✅ | **unified**: `core/ingest-contract.ts` holds the one prompt/template + `compileBrief(payload, llm)`; `compile-brief.ts` is now a thin Anthropic adapter; drift-guard retained |
 | M-1 | MEDIUM | `StartOptions` silent override | ✅ | conflict guard in `start()`; test added; typed union staged (B3) |
 | M-2 | MEDIUM | `control/plane.ts` god module | ✅ | extracted `ControlPlane.finalize()` (refuter + persist + experience write) |
 | M-3 | MEDIUM | `core/` not shared / misnamed | ✅ doc · 🟡 template | `core/README.md` names it the contract SoT + drift-guard; template wiring staged (B4) |
 | M-4 | MEDIUM | Telemetry env vars shown active | ✅ | `OPERATIONS_PLAN §12` rows badged *(planned)*; §8 PLANNED banner |
+| H-1 | HIGH | App plan discarded at seam | ✅ | `core/plan-io.ts` (`writePlan`/`loadPlan`) + app persists to `VERITAS_MISSIONS_DIR`, returns `planPath`; round-trip test |
 | H-2 | HIGH | Docs cite non-existent modules | ✅ | `DEPENDENCIES.md` status banner + path corrections (rsi/, mission/experience-store) |
 | H-3 | HIGH | Three conflicting Modal designs | ✅ | canonical = `OPERATIONS_PLAN §7`/`PHASE2_MODAL_EXECUTION.md`; `STATIC_DEPLOYMENT.md` Modal marked superseded |
-| L-1 | LOW | `APP_PLAN.md` stale `app/src/lib/` | ✅ | update banner → points at `core/` |
+| H-4 | HIGH | No harness-from-ingestion | ✅ · 🟡 codegen | `meta/harness-spec.ts` (`HarnessSpec` + `deriveHarnessSpec` bridge + `renderLoadoutsModule`) + `createHarness --from-spec` scaffold + tests; remaining sliver: wire generated loadouts into the template's `LoadoutRegistry` so a spec-built harness is green end-to-end |
+| H-5 | HIGH | RSI can't edit base-scripts; cadence | ✅ | base-scripts registered as RSI `EditableSurface`s + human-gate test; **telemetry W4 built** (types/bus/logger/reader + control-plane emit + CLI `LOG_FILE`) as the inner→outer contract |
+| L-1 | LOW | `APP_PLAN.md` stale `app/src/lib/` | ✅ | banner → points at `core/` |
 | L-3 | LOW | Overlapping deployment docs | ✅ partial | Modal sections cross-linked to canonical; full doc merge staged |
-| H-1 | HIGH | App plan discarded at seam | 🟡 | `core/plan-io.ts` spec below; write-back needs harness FS access (Modal/0.2) |
-| H-4 | HIGH | No harness-from-ingestion | 🟡 | `HarnessSpec` + bimodal `create-harness` spec below (net-new) |
-| H-5 | HIGH | RSI can't edit base-scripts; cadence | 🟡 | language reconciled (B5); telemetry + editable-surface spec below (net-new) |
-| M-5 | MEDIUM | `cli.ts main()` 142-ln dispatcher | 🟡 | **deliberately deferred**: `cli.ts` has no test; refactoring untested hot code exceeds its Low value. Spec below |
+| — | — | pre-existing broken meta test | ✅ | `meta/registry.test.ts` corrected: veritas-research is the pure template (`capabilities: []`); "research" asserted on veritas-example |
+| M-5 | MEDIUM | `cli.ts main()` 142-ln dispatcher | 🟡 | **deliberately deferred**: `cli.ts` has no test; refactoring untested hot code exceeds its Low value. Needs `cli.test.ts` first |
 | L-2 | LOW | Deep nesting in parse/mcp | ⚪ | accepted — inherently branchy; revisit only if extended |
 
-**Test result after this pass:** `veritas-example` 248 pass (was 243; +4 drift-guard, +1 M-1 guard, −0), `veritas-research` unchanged, `app` builds clean. No behaviour changed except the new `start()` conflict guard (previously-silent contradictions now error).
+**Test result after this pass:** `veritas-example` **258 pass** (was 243; +drift-guard, +plan-io, +editable-surfaces, +telemetry, +M-1 guard), `veritas-research` 178 pass, `meta` 35 pass (fixed 1 pre-existing failure), `app` builds clean. Behaviour changes are limited to: the `start()` conflict guard (contradictions now error) and opt-in telemetry emission (inert unless a bus/`LOG_FILE` is wired). Everything else is additive or a behaviour-preserving extraction.
 
 ---
 
 ## 2. High-level plan (six workstreams)
 
 ```
-W1  Consolidate the contract        C-1, C-2(guard), M-3          ✅ landed
+W1  Consolidate the contract        C-1, C-2, M-3                 ✅ landed (C-2 fully unified)
 W2  Doc-truth pass                   H-2, H-3, M-4, L-1, L-3       ✅ landed
-W3  Harden the ingest→exec seam      M-1, M-2                      ✅ landed
-     └─ typed union + write-back      B3, H-1                       🟡 staged
-W4  Telemetry (inner→outer contract) H-5 (build src/telemetry/)    🟡 staged — prerequisite for runtime RSI
-W5  Self-extension & RSI surfaces    H-4 (HarnessSpec), H-5 (base-scripts editable)  🟡 staged
-W6  Second step (Modal sandboxes)    — out of scope this review, gated on W1–W5
+W3  Harden the ingest→exec seam      M-1, M-2, H-1                 ✅ landed (plan write-back via core/plan-io.ts)
+     └─ typed union (B3) + M-5 verb table                          🟡 staged
+W4  Telemetry (inner→outer contract) src/telemetry/ + integration  ✅ landed
+W5  Self-extension & RSI surfaces    H-4 HarnessSpec, H-5 base-scripts editable  ✅ landed
+     └─ generated-loadouts → LoadoutRegistry codegen                🟡 staged (sliver)
+W6  Second step (Modal sandboxes)    — out of scope, gated on W1–W5
 ```
 
 The dependency spine: **W1 unblocks everything** (one contract to point at) → W3 seam → W4 telemetry
 (the inner→outer interface) → W5 (RSI consumes telemetry, edits surfaces incl. base-scripts) → W6
-(missions run remotely and stream telemetry back). W1–W3 landed this pass; W4–W5 are specified below;
-W6 is explicitly not authored.
+(missions run remotely and stream telemetry back). W1–W5 landed this pass; the only staged remnants
+are the B3 typed-union/M-5 CLI refactor (blocked on adding CLI tests) and the spec→LoadoutRegistry
+codegen sliver of H-4. W6 (Modal) is explicitly not authored.
 
 ---
 
@@ -212,9 +215,22 @@ covers both CLI edits, and add a minimal `cli.test.ts` (verb dispatch + exit cod
 
 ## 6. Validation
 
-- `cd harness/veritas-example && bun run build && bun test` → tsc clean, **248 pass / 0 fail**.
-- `cd app && bun run build` → clean (7 routes).
-- New behaviour is limited to the `start()` conflict guard (contradictory plan+explicit fields now
-  error with a clear message); everything else is additive (tests, docs) or a behaviour-preserving
-  extraction (`finalize()`). Self-review: every landed change traces to a file:function above and is
-  covered by a test or is documentation.
+- `harness/veritas-example` → tsc clean, **258 pass / 0 fail** (was 243; +15 across drift-guard,
+  plan-io, editable-surfaces, telemetry, M-1 guard).
+- `harness/veritas-research` → tsc clean, **178 pass / 0 fail**.
+- `meta` → **35 pass / 0 fail** (corrected one pre-existing stale registry test).
+- `app` → `bun run build` clean (7 routes).
+- New behaviour is limited to (a) the `start()` conflict guard (contradictory plan+explicit fields
+  now error) and (b) opt-in telemetry emission (inert unless a bus/`LOG_FILE` is wired). Everything
+  else is additive (new modules + tests, docs) or a behaviour-preserving extraction (`finalize()`).
+  Self-review: every landed change traces to a file:function above and is covered by a test or is
+  documentation.
+
+### Remaining (staged, with reasons)
+- **B3 typed intake + M-5 CLI verb table** — blocked on adding `cli.test.ts`; refactoring the
+  untested CLI dispatcher is higher risk than value until coverage exists.
+- **H-4 codegen sliver** — `renderLoadoutsModule` output is written as `loadouts.generated.ts`, but
+  wiring it into the template's `LoadoutRegistry` so a `--from-spec` harness passes `bun test`
+  end-to-end is the one remaining step (kept out to avoid shipping a generator that could emit a
+  non-green harness).
+- **W6 Modal** — explicitly out of scope for this review.

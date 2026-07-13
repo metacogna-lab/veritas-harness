@@ -21,6 +21,8 @@ export interface ApiIngestSuccess {
   plan: ResearchPlan;
   score: number;
   dimensions: DimensionResult[];
+  /** Set when VERITAS_MISSIONS_DIR is configured and the plan was persisted (H-1). */
+  planPath?: string;
 }
 
 export interface ApiIngestError {

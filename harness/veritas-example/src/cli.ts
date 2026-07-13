@@ -24,6 +24,7 @@ import { runIngest } from "./ingest/ingest.ts";
 import { digestSources } from "./resources/source-digest.ts";
 import { evalPlanWithConfig, renderEvalReport } from "./resources/plan-eval.ts";
 import { rsiDryRun } from "./rsi/dry-run.ts";
+import { telemetryFromEnv } from "./telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { printBanner } from "./banner.ts";
@@ -177,7 +178,9 @@ async function main(): Promise<number> {
     if (!objective || !target) {
       return usage('start "<objective>" --target <t> | start --plan <research-plan.json>');
     }
-    const plane = new ControlPlane({ llm: buildLLM(), store });
+    // Telemetry (W4) — opt-in via LOG_FILE; zero-cost and inert when unset.
+    const telem = telemetryFromEnv();
+    const plane = new ControlPlane({ llm: buildLLM(), store, bus: telem?.bus });
     const preAuth = flags["pre-auth"] ? flags["pre-auth"].split(",").map((s) => s.trim()) : undefined;
     try {
       const { id, result } = await plane.start({
@@ -199,6 +202,8 @@ async function main(): Promise<number> {
         return 1;
       }
       throw err;
+    } finally {
+      telem?.detach();
     }
   }
 

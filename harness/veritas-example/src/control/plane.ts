@@ -27,6 +27,7 @@ import { evalPlanWithConfig, renderEvalReport } from "../resources/plan-eval.ts"
 import { digestSources } from "../resources/source-digest.ts";
 import { writeExperienceEntry, type HarnessConfigSnapshot } from "../mission/experience-store.ts";
 import type { MissionScope } from "../safety/scope.ts";
+import type { EventBus } from "../telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -90,18 +91,22 @@ export class ControlPlane {
      * Defaults to <harnessRoot>/resources/experience. Injectable for tests.
      */
     experienceStoreRoot?: string;
+    /** Optional telemetry bus (W4). When absent, no events are emitted. */
+    bus?: EventBus;
   }) {
     this.llm = opts.llm;
     this.store = opts.store;
     this.loadouts = opts.loadouts ?? defaultLoadouts();
     this.tools = opts.tools ?? starterRegistry();
     this.refuterLLM = opts.refuterLLM;
+    this.bus = opts.bus;
     this.experienceStoreRoot =
       opts.experienceStoreRoot ??
       join(dirname(fileURLToPath(import.meta.url)), "..", "..", "resources", "experience");
   }
 
   private readonly experienceStoreRoot: string;
+  private readonly bus?: EventBus;
 
   /** Resolve which loadout serves an objective. Explicit name wins; else default. */
   resolveLoadout(name?: string): Loadout {
@@ -175,6 +180,13 @@ export class ControlPlane {
     const scope =
       opts.scopeOverride ?? mapped?.scope ?? loadout.targetAdapter.buildScope(target);
     const mission = new Mission({ objective, scope, findingValidator: evidenceGate });
+    const startedAt = Date.now();
+    this.bus?.emit({
+      kind: "mission.start",
+      missionId: mission.id,
+      slug: opts.plan?.metadata.slug ?? mission.id,
+      objective,
+    });
 
     emit(`mission ${mission.id} started`);
     emit(`loadout: ${loadout.name} | ${loadout.targetAdapter.describeScope(scope)}`);
@@ -202,6 +214,13 @@ export class ControlPlane {
 
     const snapshot = await this.finalize(mission, loadout, scope, emit);
 
+    this.bus?.emit({
+      kind: "mission.end",
+      missionId: mission.id,
+      status: result.status === "error" ? "error" : "ok",
+      durationMs: Date.now() - startedAt,
+    });
+
     emit(`mission ${mission.id} ${result.status}`);
     return { id: mission.id, result, snapshot };
   }
@@ -223,7 +242,13 @@ export class ControlPlane {
     if (this.refuterLLM) {
       const proposed = mission.findings.filter((f) => f.status === "proposed");
       for (const f of proposed) {
+        this.bus?.emit({ kind: "finding.proposed", missionId: mission.id, findingId: f.id });
         const verdict = await promoteFinding(mission, f.id, this.refuterLLM);
+        this.bus?.emit(
+          verdict.verdict === "confirmed"
+            ? { kind: "finding.confirmed", missionId: mission.id, findingId: f.id }
+            : { kind: "finding.refuted", missionId: mission.id, findingId: f.id, reason: verdict.reason },
+        );
         emit(`refuter: finding ${f.id} → ${verdict.verdict} (${verdict.reason})`);
       }
     }

@@ -65,7 +65,9 @@ describe("contract drift-guard: core/ ↔ harness (C-1)", () => {
 });
 
 describe("ingest compiler drift-guard: security invariant (C-2)", () => {
-  const coreCompiler = read(join(REPO_ROOT, "core", "compile-brief.ts"));
+  // The canonical prompt/template now lives in core/ingest-contract.ts (the shared,
+  // runtime-agnostic compiler); core/compile-brief.ts is a thin Anthropic adapter.
+  const coreCompiler = read(join(REPO_ROOT, "core", "ingest-contract.ts"));
   const harnessCompiler = read(join(HARNESS_ROOT, "src", "ingest", "fit-intent.ts"));
 
   it("both compilers mark intent as UNTRUSTED DATA (prompt-injection defence)", () => {

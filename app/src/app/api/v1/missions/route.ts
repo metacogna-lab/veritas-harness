@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { serverCompileBrief } from "@core/compile-brief";
 import { evalPlanWithConfig } from "@core/eval";
+import { writePlan } from "@core/plan-io";
 import type { ApiIngestResult } from "@core/types";
 
 const payloadSchema = z.object({
@@ -96,12 +97,26 @@ export async function POST(req: Request): Promise<NextResponse<ApiIngestResult>>
       );
     }
 
+    // H-1: persist the compiled plan as the runnable file when an operator points
+    // the app at a harness-visible missions dir — so the CLI/sandbox runs THIS plan,
+    // never a recompiled one. Best-effort: a write failure must not fail ingest.
+    let planPath: string | undefined;
+    const missionsDir = process.env.VERITAS_MISSIONS_DIR;
+    if (missionsDir) {
+      try {
+        planPath = writePlan(missionsDir, plan);
+      } catch (err) {
+        console.error("[POST /api/v1/missions] plan persist failed", err);
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       slug,
       plan,
       score: evalResult.score,
       dimensions: evalResult.dimensions,
+      planPath,
     });
   } catch (err) {
     console.error("[POST /api/v1/missions]", err);

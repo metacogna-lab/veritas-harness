@@ -79,5 +79,9 @@ test("the committed root registry validates and lists veritas-research as #1", (
   const v = findByName(reg, "veritas-research");
   expect(v).toBeDefined();
   expect(v?.index).toBe(1);
-  expect(v?.capabilities).toContain("research");
+  // veritas-research is the PURE 8-plane template — it carries no domain capabilities.
+  // The "research" capability lives on veritas-example (the domain harness).
+  expect(v?.capabilities).toEqual([]);
+  const example = findByName(reg, "veritas-example");
+  expect(example?.capabilities).toContain("research");
 });

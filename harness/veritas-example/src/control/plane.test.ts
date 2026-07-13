@@ -8,6 +8,8 @@ import { LLMBackbone } from "../llm/index.ts";
 import type { Transport, TransportResponse } from "../llm/types.ts";
 import type { ProviderConfig } from "../config/index.ts";
 import { loadResearchPlan } from "../resources/research-plan.ts";
+import { EventBus } from "../telemetry/index.ts";
+import type { HarnessEvent } from "../telemetry/types.ts";
 
 const cfg: ProviderConfig = {
   provider: "anthropic",
@@ -101,6 +103,36 @@ describe("ControlPlane lifecycle", () => {
     expect(snap.scope.paths).toContain("bench/scope-gate");
     const note = snap.transcript.find((e) => e.kind === "note");
     expect(note?.content).toContain("example-slug");
+  });
+
+  test("emits mission.start and mission.end on the telemetry bus (W4)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "veritas-code-"));
+    const file = join(dir, "app.ts");
+    await writeFile(file, "export const x = 1;");
+    const store = await tmpStore();
+    const bus = new EventBus();
+    const events: HarnessEvent[] = [];
+    bus.on((e) => events.push(e));
+
+    const llm = scriptedLLM([{ text: "done, x is a constant.", usage: zero }]);
+    const plane = new ControlPlane({ llm, store, bus });
+    await plane.start({ objective: "summarize app.ts", target: dir, loadout: "codebase-audit" });
+
+    const kinds = events.map((e) => e.kind);
+    expect(kinds).toContain("mission.start");
+    expect(kinds).toContain("mission.end");
+    const end = events.find((e) => e.kind === "mission.end");
+    expect(end && end.kind === "mission.end" && end.status).toBe("ok");
+  });
+
+  test("emits nothing and behaves identically when no bus is wired (W4 zero-cost)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "veritas-code-"));
+    await writeFile(join(dir, "app.ts"), "export const x = 1;");
+    const store = await tmpStore();
+    const llm = scriptedLLM([{ text: "done.", usage: zero }]);
+    const plane = new ControlPlane({ llm, store }); // no bus
+    const { result } = await plane.start({ objective: "summarize app.ts", target: dir, loadout: "codebase-audit" });
+    expect(result.status).toBe("answered");
   });
 
   test("start rejects an explicit objective that contradicts the plan (M-1)", async () => {

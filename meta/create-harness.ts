@@ -18,11 +18,12 @@
  * unit-testable; the CLI wrapper handles argv, stdout, and exit codes.
  */
 import { join } from "node:path";
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { readRegistry, writeRegistry, addHarness, nextIndex, findByName, PLANES, type HarnessEntry } from "./registry.ts";
 import { writeManifest, type Manifest } from "./manifest.ts";
 import { copyDirWithTokens, isKebabCase, availablePacks, packSkillNames } from "./scaffold.ts";
+import { renderLoadoutsModule, type HarnessSpec } from "./harness-spec.ts";
 
 const META_DIR = import.meta.dir;
 const TEMPLATE_DIR = join(META_DIR, "templates", "harness-template");
@@ -36,6 +37,13 @@ export interface CreateOptions {
   install?: boolean;
   /** Run `bun test` in the new harness (default true). */
   test?: boolean;
+  /**
+   * Spec-driven scaffold (H-4). When provided, the harness is generated from the
+   * spec: the spec is persisted as HARNESS_SPEC.json, a generated loadouts module is
+   * emitted, and manifest capabilities are taken from the spec. The spec's name must
+   * match `name`. Absent ⇒ the classic template-only path (unchanged).
+   */
+  spec?: HarnessSpec;
   /** Sink for progress lines (default: discard). */
   log?: (line: string) => void;
 }
@@ -54,11 +62,15 @@ function run(cmd: string, args: string[], cwd: string): { ok: boolean; output: s
 
 export function createHarness(opts: CreateOptions): CreateResult {
   const log = opts.log ?? (() => {});
-  const capabilities = opts.capabilities ?? [];
+  // Spec-driven runs take capabilities from the spec (H-4); otherwise from opts.
+  const capabilities = opts.spec ? opts.spec.capabilities : opts.capabilities ?? [];
 
   // 1. validate
   log(`[1/7] validate "${opts.name}"`);
   if (!isKebabCase(opts.name)) throw new Error(`harness name must be kebab-case: "${opts.name}"`);
+  if (opts.spec && opts.spec.name !== opts.name) {
+    throw new Error(`spec name "${opts.spec.name}" does not match harness name "${opts.name}"`);
+  }
   const registry = readRegistry(opts.root);
   if (findByName(registry, opts.name)) throw new Error(`harness "${opts.name}" is already registered`);
   const dir = join(opts.root, "harness", opts.name);
@@ -71,6 +83,13 @@ export function createHarness(opts: CreateOptions): CreateResult {
   // 2. scaffold the 8-plane template
   log(`[2/7] scaffold planes → harness/${opts.name}`);
   copyDirWithTokens(TEMPLATE_DIR, dir, { __HARNESS_NAME__: opts.name });
+
+  // 2b. spec-driven scaffold (H-4): persist the spec and emit generated loadouts.
+  if (opts.spec) {
+    log(`[2/7] spec-driven → HARNESS_SPEC.json + src/agent/loadouts.generated.ts`);
+    writeFileSync(join(dir, "HARNESS_SPEC.json"), JSON.stringify(opts.spec, null, 2) + "\n", "utf8");
+    writeFileSync(join(dir, "src", "agent", "loadouts.generated.ts"), renderLoadoutsModule(opts.spec), "utf8");
+  }
 
   // 3. install capability packs (harness-specific skills, initialized at run time)
   const installedSkills: string[] = [];
@@ -86,7 +105,9 @@ export function createHarness(opts: CreateOptions): CreateResult {
   const manifest: Manifest = {
     name: opts.name,
     index,
-    description: `Harness #${index} — scaffolded from the meta-harness template.`,
+    description: opts.spec
+      ? `Harness #${index} — generated from HarnessSpec "${opts.spec.name}" (H-4).`
+      : `Harness #${index} — scaffolded from the meta-harness template.`,
     capabilities,
     planes: [...PLANES],
     skills: installedSkills,

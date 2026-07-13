@@ -129,6 +129,8 @@ Ways to get involved:
 
 Please read [`CLAUDE.md`](./CLAUDE.md) before contributing — it describes the build order, safety invariants, and directory contract that keep the meta-harness composable.
 
+For full operational reference (deployment, Docker, Modal, runbooks) see [`docs/OPERATIONS_PLAN.md`](./docs/OPERATIONS_PLAN.md).
+
 ```bash
 # Run everything before opening a PR:
 bun run harness-doctor
@@ -147,19 +149,30 @@ veritas/
   skills/                   generic meta skills (operate any harness)
   .claude/commands/         /new-harness, /evolve-harness and other slash commands
   harness/
-    veritas-research/       canonical harness #1 — research domain
+    veritas-research/       canonical harness #1 — 8-plane template (reference)
       src/                  8-plane source (agent, safety, tools, evidence, rsi, …)
       bench/                committed-oracle benchmark suites
       scripts/              verify-claims, bench, doctor, verify-harness-candidate
+    veritas-example/        harness #2 — research domain (runnable)
+      src/                  loadouts, ingest, RSI, memory, telemetry
       skills/               harness-specific skills (ingest, analysis)
       resources/            lessons.json, experience store, source summaries
+  core/                     shared domain abstractions (schema, dogma, eval, types)
+  app/                      Next.js 15 web frontend (STEP 1 in browser)
   research/
     raw/                    source papers (markdown summaries committed, PDFs gitignored)
-    processed/              structured digests, one per paper
+    processed/              structured digests, one per paper (canonical --target corpus)
     meta-analyses/          cross-paper synthesis outputs
+  docs/                     operational documentation
+    OPERATIONS_PLAN.md      full ops reference: deployment, Docker, Modal, runbooks
+    CLI.md                  CLI flag reference
+    USE-CASES.md            operator use-case walkthroughs
+    PRIMARY-FUNCTION.md     primary function description
+    DEPENDENCIES.md         research-grounded dependency analysis
   agents/
-    plans/                  build plans and meta-analysis outputs
+    plans/                  build plans
     config/                 operating mandate (agents-config.md)
+    state/                  session state and build log
 ```
 
 ---

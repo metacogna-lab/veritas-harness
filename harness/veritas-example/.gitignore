@@ -10,3 +10,6 @@ coverage
 
 # mission run store (runtime artifacts, not source)
 .veritas/
+
+# RSI review artifacts (generated per dry-run)
+loadout-candidate/

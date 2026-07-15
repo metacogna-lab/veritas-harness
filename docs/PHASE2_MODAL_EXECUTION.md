@@ -1,3 +1,5 @@
+> **Superseded (implementation):** TypeScript `SandboxProvider` in `harness/veritas-example/src/sandbox/` (Phase 3.0). This doc remains the design record for volumes/secrets/timeouts.
+
 # Phase 2 — Harness Execution in Modal Sandboxes
 
 ## Status: PLAN (post-MVP) — **NOT YET IMPLEMENTED**

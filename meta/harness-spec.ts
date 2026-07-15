@@ -105,13 +105,13 @@ export function renderLoadoutsModule(spec: HarnessSpec): string {
 
   return [
     `// GENERATED from HarnessSpec "${spec.name}" (veritas-v0.2 H-4). Edit the spec, not this file.`,
-    `// Wire these into the LoadoutRegistry per the template's src/agent/specialists.ts.`,
+    `// Consumed by src/agent/loadouts.ts → fromGeneratedLoadout → LoadoutRegistry.`,
     ``,
     `export const generatedLoadouts = [`,
     loadoutEntries,
-    `];`,
+    `] as const;`,
     ``,
-    `export const scopeDefaults = ${JSON.stringify(spec.scopeDefaults)};`,
+    `export const scopeDefaults = ${JSON.stringify(spec.scopeDefaults)} as const;`,
     ``,
   ].join("\n");
 }

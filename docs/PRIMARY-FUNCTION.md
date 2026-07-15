@@ -33,7 +33,9 @@ It provides:
 - **Docker files**: `Dockerfile`, `docker-compose.yml`
 - **No concrete loadouts** — `bun src/cli.ts loadouts` prints `(no loadouts registered)` by design
 
-When you need to run a real mission, use veritas-example (or create your own harness from this template).
+When you need to run a real mission, use veritas-example (or create your own harness from
+`meta/templates/harness-template/` via `bun run create-harness`). `veritas-research` and
+`veritas-example` are exploratory spawned packages — they contain no harness-creation pipeline.
 
 ---
 

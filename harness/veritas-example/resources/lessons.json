@@ -1,14 +1,3 @@
-[
-  {
-    "id": "lesson-int-smoke",
-    "missionId": "int-smoke",
-    "objective": "audit app.ts for a debug flag",
-    "worked": [
-      "1 finding(s) confirmed after refutation",
-      "tools used: read_file, record_finding"
-    ],
-    "failed": [],
-    "gaps": [],
-    "recordedAt": "2026-07-09T08:05:51.983Z"
-  }
-]
+{"id":"lesson-int-smoke","missionId":"int-smoke","objective":"audit app.ts for a debug flag","worked":["1 finding(s) confirmed after refutation","tools used: read_file, record_finding"],"failed":[],"gaps":[],"recordedAt":"2026-07-09T08:05:51.983Z","harnessSurface":"","helpfulnessCount":0,"harmfulnessCount":1,"status":"active"}
+{"id":"lesson-int-smoke","missionId":"int-smoke","objective":"audit app.ts for a debug flag","worked":["1 finding(s) confirmed after refutation","tools used: read_file, record_finding"],"failed":[],"gaps":[],"recordedAt":"2026-07-09T08:05:51.983Z","harnessSurface":"","helpfulnessCount":0,"harmfulnessCount":2,"status":"active"}
+{"id":"lesson-int-smoke","missionId":"int-smoke","objective":"audit app.ts for a debug flag","worked":["1 finding(s) confirmed after refutation","tools used: read_file, record_finding"],"failed":[],"gaps":[],"recordedAt":"2026-07-09T08:05:51.983Z","harnessSurface":"","helpfulnessCount":0,"harmfulnessCount":3,"status":"active"}

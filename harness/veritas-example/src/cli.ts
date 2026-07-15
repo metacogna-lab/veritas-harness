@@ -9,7 +9,7 @@
  *   veritas status <id>
  *   veritas report <id>
  *   veritas loadouts
- *   veritas rsi            # self-improving loop, DRY-RUN only (human-gated apply)
+ *   veritas rsi [--last-n N] [--llm] [--candidate <path>] [--suite <name>]
  *
  * Scope is derived from the chosen loadout's target adapter. Gated tools run
  * unattended here, so anything above `active` fails safe unless explicitly
@@ -29,7 +29,7 @@ import { loadResearchPlan } from "./resources/research-plan.ts";
 import { runIngest } from "./ingest/ingest.ts";
 import { digestSources } from "./resources/source-digest.ts";
 import { evalPlanWithConfig, renderEvalReport } from "./resources/plan-eval.ts";
-import { rsiDryRun } from "./rsi/dry-run.ts";
+import { runRsiCli } from "./rsi/dry-run.ts";
 import { telemetryFromEnv } from "./telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -133,10 +133,28 @@ async function handleReport(ctx: CliContext): Promise<number> {
 }
 
 async function handleRsi(ctx: CliContext): Promise<number> {
-  // Self-improving loop, DRY-RUN only: mine → propose → validate → human-gated apply.
-  // Never applies an edit; the apply stage is gated by requireHumanRelease (invariant #5).
-  ctx.print(await rsiDryRun());
-  return 0;
+  // Self-improving loop: mine → propose → validate → human-gated apply.
+  // Never applies an edit to disk (invariant #5).
+  const lastNRaw = ctx.flags["last-n"];
+  const lastN = lastNRaw ? Number(lastNRaw) : undefined;
+  if (lastNRaw && (!Number.isFinite(lastN) || (lastN ?? 0) <= 0)) {
+    return ctx.usage("rsi [--last-n <N>] [--llm] [--candidate <path>] [--suite <name>]");
+  }
+  const useLlm = ctx.flags.llm === "true";
+  try {
+    const out = await runRsiCli({
+      lastN,
+      llm: useLlm,
+      llmBackbone: useLlm ? ctx.buildLLM() : undefined,
+      candidatePath: ctx.flags.candidate,
+      suite: ctx.flags.suite,
+    });
+    ctx.print(out);
+    return 0;
+  } catch (err) {
+    ctx.printErr(`rsi: ${(err as Error).message}`);
+    return 1;
+  }
 }
 
 async function handleEval(ctx: CliContext): Promise<number> {

@@ -18,12 +18,12 @@
  * unit-testable; the CLI wrapper handles argv, stdout, and exit codes.
  */
 import { join } from "node:path";
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, writeFileSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { readRegistry, writeRegistry, addHarness, nextIndex, findByName, PLANES, type HarnessEntry } from "./registry.ts";
 import { writeManifest, type Manifest } from "./manifest.ts";
 import { copyDirWithTokens, isKebabCase, availablePacks, packSkillNames } from "./scaffold.ts";
-import { renderLoadoutsModule, type HarnessSpec } from "./harness-spec.ts";
+import { renderLoadoutsModule, validateHarnessSpec, type HarnessSpec } from "./harness-spec.ts";
 
 const META_DIR = import.meta.dir;
 const TEMPLATE_DIR = join(META_DIR, "templates", "harness-template");
@@ -149,32 +149,66 @@ export function createHarness(opts: CreateOptions): CreateResult {
   return { path: dir, index, manifest, skills: installedSkills };
 }
 
-function parseArgs(argv: string[]): { name?: string; capabilities: string[] } {
+/** Parse create-harness argv (`<name> [--capabilities a,b] [--from-spec path]`). */
+export function parseArgs(argv: string[]): {
+  name?: string;
+  capabilities: string[];
+  fromSpec?: string;
+} {
   let name: string | undefined;
+  let fromSpec: string | undefined;
   const capabilities: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     if (a === "--capabilities" || a === "-c") {
       const val = argv[++i];
       if (val) capabilities.push(...val.split(",").map((s) => s.trim()).filter(Boolean));
+    } else if (a === "--from-spec") {
+      const val = argv[++i];
+      if (!val) throw new Error("--from-spec requires a path to a HarnessSpec JSON file");
+      fromSpec = val;
     } else if (!a.startsWith("-") && !name) {
       name = a;
     }
   }
-  return { name, capabilities };
+  return { name, capabilities, fromSpec };
+}
+
+function loadSpecFile(path: string): HarnessSpec {
+  if (!existsSync(path)) throw new Error(`spec file not found: ${path}`);
+  const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
+  return validateHarnessSpec(raw);
 }
 
 function main(): void {
-  const { name, capabilities } = parseArgs(process.argv.slice(2));
+  let parsed: ReturnType<typeof parseArgs>;
+  try {
+    parsed = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    process.stdout.write(`\n❌ ${(err as Error).message}\n`);
+    process.exit(1);
+    return;
+  }
+  const { name, capabilities, fromSpec } = parsed;
   if (!name) {
-    process.stdout.write("usage: bun run create-harness <name> [--capabilities a,b]\n");
+    process.stdout.write(
+      "usage: bun run create-harness <name> [--capabilities a,b] [--from-spec path/to/spec.json]\n",
+    );
     process.stdout.write(`available capability packs: ${availablePacks(PACKS_DIR).join(", ") || "(none)"}\n`);
     process.exit(1);
   }
   try {
-    const result = createHarness({ root: process.cwd(), name, capabilities, log: (l) => process.stdout.write(`${l}\n`) });
+    const spec = fromSpec ? loadSpecFile(fromSpec) : undefined;
+    const result = createHarness({
+      root: process.cwd(),
+      name,
+      capabilities: spec ? undefined : capabilities,
+      spec,
+      log: (l) => process.stdout.write(`${l}\n`),
+    });
     process.stdout.write(`\n✅ harness #${result.index} created at ${result.path}\n`);
     if (result.skills.length) process.stdout.write(`   skills: ${result.skills.join(", ")}\n`);
+    if (spec) process.stdout.write(`   loadouts: generated from HarnessSpec (${spec.loadouts.map((l) => l.name).join(", ")})\n`);
     process.stdout.write(`\nNext: cd harness/${name} && bun run dev planes\n`);
   } catch (err) {
     process.stdout.write(`\n❌ ${(err as Error).message}\n`);

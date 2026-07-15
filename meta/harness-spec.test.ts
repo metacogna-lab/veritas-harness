@@ -86,9 +86,37 @@ describe("createHarness --from-spec (H-4)", () => {
       expect(existsSync(join(result.path, "src", "agent", "loadouts.generated.ts"))).toBe(true);
       const gen = readFileSync(join(result.path, "src", "agent", "loadouts.generated.ts"), "utf8");
       expect(gen).toContain("generatedLoadouts");
+      expect(gen).toContain('name: "research"');
+      expect(existsSync(join(result.path, "src", "agent", "loadouts.ts"))).toBe(true);
+      expect(existsSync(join(result.path, "src", "agent", "specialists.ts"))).toBe(true);
       const manifest = readManifest(result.path);
       expect(manifest.capabilities).toContain("research");
       expect(manifest.description).toContain("HarnessSpec");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("registers generated loadouts into LoadoutRegistry when bun test runs", () => {
+    const root = mkdtempSync(join(tmpdir(), "veritas-meta-"));
+    try {
+      require("node:fs").writeFileSync(join(root, "harnesses.json"), JSON.stringify({ version: 1, harnesses: [] }));
+      const spec = deriveHarnessSpec({
+        slug: "gen-wired",
+        loadout: "research",
+        specialists: [{ role: "researcher", focus: "explore" }],
+        scope: { hosts: [], paths: ["docs"] },
+        toolNames: ["read_file"],
+      });
+      const result = createHarness({ root, name: "gen-wired", spec, install: true, test: true });
+      expect(result.path).toContain("gen-wired");
+      // Registry wiring is asserted by the scaffolded loadouts.test.ts (must be green above).
+      const gen = readFileSync(join(result.path, "src", "agent", "loadouts.generated.ts"), "utf8");
+      expect(gen).toContain('name: "research"');
+      expect(gen).toContain("read_file");
+      const loadoutsTs = readFileSync(join(result.path, "src", "agent", "loadouts.ts"), "utf8");
+      expect(loadoutsTs).toContain("fromGeneratedLoadout");
+      expect(loadoutsTs).toContain("generatedLoadouts");
     } finally {
       rmSync(root, { recursive: true, force: true });
     }

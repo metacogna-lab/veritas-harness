@@ -27,7 +27,7 @@ Legend: ✅ landed & tested · 🟡 staged (spec below; net-new subsystem or blo
 | H-1 | HIGH | App plan discarded at seam | ✅ | `core/plan-io.ts` (`writePlan`/`loadPlan`) + app persists to `VERITAS_MISSIONS_DIR`, returns `planPath`; round-trip test |
 | H-2 | HIGH | Docs cite non-existent modules | ✅ | `DEPENDENCIES.md` status banner + path corrections (rsi/, mission/experience-store) |
 | H-3 | HIGH | Three conflicting Modal designs | ✅ | canonical = `OPERATIONS_PLAN §7`/`PHASE2_MODAL_EXECUTION.md`; `STATIC_DEPLOYMENT.md` Modal marked superseded |
-| H-4 | HIGH | No harness-from-ingestion | ✅ · 🟡 codegen | `meta/harness-spec.ts` (`HarnessSpec` + `deriveHarnessSpec` bridge + `renderLoadoutsModule`) + `createHarness --from-spec` scaffold + tests; remaining sliver: wire generated loadouts into the template's `LoadoutRegistry` so a spec-built harness is green end-to-end |
+| H-4 | HIGH | No harness-from-ingestion | ✅ | `meta/harness-spec.ts` + `create-harness --from-spec` + template `LoadoutRegistry` wiring (`loadouts.ts` ← `loadouts.generated.ts` via `fromGeneratedLoadout`); e2e `bun test` green on spec-built harnesses |
 | H-5 | HIGH | RSI can't edit base-scripts; cadence | ✅ | base-scripts registered as RSI `EditableSurface`s + human-gate test; **telemetry W4 built** (types/bus/logger/reader + control-plane emit + CLI `LOG_FILE`) as the inner→outer contract |
 | L-1 | LOW | `APP_PLAN.md` stale `app/src/lib/` | ✅ | banner → points at `core/` |
 | L-3 | LOW | Overlapping deployment docs | ✅ partial | Modal sections cross-linked to canonical; full doc merge staged |
@@ -49,14 +49,14 @@ W2  Doc-truth pass                   H-2, H-3, M-4, L-1, L-3       ✅ landed
 W3  Harden the ingest→exec seam      M-1, M-2, H-1, B3, M-5        ✅ landed (typed union + CLI verb table + cli.test.ts)
 W4  Telemetry (inner→outer contract) src/telemetry/ + integration  ✅ landed
 W5  Self-extension & RSI surfaces    H-4 HarnessSpec, H-5 base-scripts editable  ✅ landed
-     └─ generated-loadouts → LoadoutRegistry codegen                🟡 staged (sliver)
+     └─ generated-loadouts → LoadoutRegistry codegen                ✅ landed
 W6  Second step (Modal sandboxes)    — out of scope, gated on W1–W5
 ```
 
 The dependency spine: **W1 unblocks everything** (one contract to point at) → W3 seam → W4 telemetry
 (the inner→outer interface) → W5 (RSI consumes telemetry, edits surfaces incl. base-scripts) → W6
-(missions run remotely and stream telemetry back). W1–W5 are fully landed; the only staged remnant
-is the spec→LoadoutRegistry codegen sliver of H-4. W6 (Modal) is explicitly not authored.
+(missions run remotely and stream telemetry back). W1–W5 are fully landed including the H-4
+spec→LoadoutRegistry codegen path. W6 (Modal) is explicitly not authored.
 
 ---
 
@@ -139,23 +139,12 @@ Integration (the risky part — do after the modules + their unit tests are gree
 (provider.*), `control/plane.ts` (mission.*). Keep emit non-throwing so telemetry can never fail a
 mission. *Order:* types→bus→logger→reader→metrics→integration, one file + test at a time.
 
-### W5 — Self-extension & RSI editable surfaces (H-4, H-5) — 🟡 staged
+### W5 — Self-extension & RSI editable surfaces (H-4, H-5) — ✅ landed
 
-**H-4 — harness from ingestion.** New contract + bimodal pipeline (reuses the 7 stages):
-```ts
-// core/harness-spec.ts (new)
-interface HarnessSpec {
-  name: string; capabilities: string[];
-  loadouts: { name: string; specialists: {role:string;focus:string}[]; toolNames: string[]; adapter: "path"|"host" }[];
-  tools: { name: string; riskTier: string }[];       // scaffolded as typed stubs
-  scopeDefaults: { hosts: string[]; paths: string[] };
-}
-```
-- `meta/create-harness.ts` — add mode flag: `createHarness(name, { fromSpec?: HarnessSpec })`. Stage 2
-  (scaffold) gains a spec-driven variant that writes `loadouts.ts`, tool stubs, and `harness.json` from
-  the spec instead of only substituting `__HARNESS_NAME__`. Stages 1,3–7 unchanged.
-- Optional ingest bridge: `src/ingest/to-harness-spec.ts` — derive a `HarnessSpec` from a `ResearchPlan`
-  when the intent implies a new domain (kept explicit; never silent).
+**H-4 — harness from ingestion.** Landed in `meta/harness-spec.ts` + CLI `--from-spec`:
+- Template ships `specialists.ts`, `loadouts.ts`, empty `loadouts.generated.ts`.
+- Spec path overwrites `loadouts.generated.ts`; `fromGeneratedLoadout` registers into `LoadoutRegistry`.
+- E2E: `createHarness({ spec, install: true, test: true })` is green.
 
 **H-5 — base-scripts as an RSI editable surface (with reconciled cadence).**
 - `src/rsi/run.ts` — extend `editableSurfaces` to include `base-scripts/doctor.mjs`,
@@ -228,8 +217,6 @@ covers both CLI edits, and add a minimal `cli.test.ts` (verb dispatch + exit cod
   and now test-pinned. Everything else is additive or behaviour-preserving.
 
 ### Remaining (staged, with reasons)
-- **H-4 codegen sliver** — `renderLoadoutsModule` output is written as `loadouts.generated.ts`, but
-  wiring it into the template's `LoadoutRegistry` so a `--from-spec` harness passes `bun test`
-  end-to-end is the one remaining step (kept out to avoid shipping a generator that could emit a
-  non-green harness).
-- **W6 Modal** — explicitly out of scope for this review.
+- **W6 Modal** — explicitly out of scope for this review (Phase 3.0 `SandboxProvider` path).
+- Optional ingest bridge `src/ingest/to-harness-spec.ts` — derive `HarnessSpec` from a ResearchPlan when
+  the intent implies a new domain (kept explicit; never silent).

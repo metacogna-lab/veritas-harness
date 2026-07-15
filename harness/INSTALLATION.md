@@ -1,15 +1,17 @@
 # Harness installation
 
-This directory holds **self-contained harness packages** — typed agent loops with safety gates,
-evidence tracking, and a control-plane CLI. Each subdirectory is an independent project with its
-own `package.json`, toolchain, and tests.
+This directory holds **spawned harness packages** — typed agent loops with safety gates,
+evidence tracking, and a control-plane CLI. Each subdirectory is an independent exploratory
+package (`package.json`, toolchain, tests). **Harness creation** (scaffold / register / capability
+packs) lives only at the repo root via `bun run create-harness` — never inside these folders.
 
 | Harness | Purpose |
 |---------|---------|
-| [`veritas-research/`](veritas-research/) | Veritas research meta-harness (canonical build target) |
+| [`veritas-research/`](veritas-research/) | Exploratory reference of the rich 8-plane spine (no domain loadouts). Scaffold *source of truth* is `meta/templates/harness-template/`. |
+| [`veritas-example/`](veritas-example/) | Research-domain reference — loadouts, ingest, RSI, bench, skills. Prefer this for running missions. |
 
 Follow the steps below for any harness under `harness/`. Paths are relative to that harness's
-root (e.g. `harness/veritas-research/`).
+root (e.g. `harness/veritas-example/`).
 
 ---
 
@@ -39,10 +41,11 @@ ollama pull qwen3-coder:latest   # or your chosen model
 
 ```bash
 git clone <repo-url> veritas
-cd veritas/harness/veritas-research
+cd veritas/harness/veritas-example
 ```
 
-Replace `veritas-research` with the harness subdirectory you are installing.
+Replace `veritas-example` with `veritas-research` (spine-only) or another `harness/<name>/` you
+created with `bun run create-harness`.
 
 ---
 
@@ -74,7 +77,7 @@ cp src/config/local.example.json src/config/local.json
 # edit local.json — defaultProvider, models, fallback chain
 ```
 
-`local.json` is gitignored. See [`veritas-research/src/config/README.md`](veritas-research/src/config/README.md)
+`local.json` is gitignored. See [`veritas-example/src/config/README.md`](veritas-example/src/config/README.md)
 for the full provider table (`anthropic`, `claude-code`, `codex`, `ollama`, `openai`, `openrouter`).
 
 ### One-off provider switch
@@ -187,10 +190,14 @@ scaffolds it and keeps the registry, manifest, and 1-based index consistent
 (invariant #4). From the repo root:
 
 ```bash
-bun run create-harness <name> --capabilities <a,b>   # e.g. --capabilities research
-bun run list-harnesses                               # confirm it registered
-bun run harness-doctor                               # meta layer healthy
+bun run create-harness <name> [--capabilities a,b] [--from-spec path/to/spec.json]
+bun run list-harnesses
+bun run harness-doctor
 ```
+
+`--from-spec` consumes a `HarnessSpec` JSON (H-4; see `meta/harness-spec.ts` and
+`agents/specs/`). Domain harnesses can derive a spec from an ingested plan via
+`harness/veritas-example/src/ingest/to-harness-spec.ts` — they do not run the scaffold themselves.
 
 The pipeline progresses in order: validate → scaffold the 8-plane template →
 install capability-pack skills into `harness/<name>/skills/` → write `harness.json`

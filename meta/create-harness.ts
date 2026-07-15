@@ -149,7 +149,8 @@ export function createHarness(opts: CreateOptions): CreateResult {
   return { path: dir, index, manifest, skills: installedSkills };
 }
 
-function parseArgs(argv: string[]): {
+/** Parse create-harness argv (`<name> [--capabilities a,b] [--from-spec path]`). */
+export function parseArgs(argv: string[]): {
   name?: string;
   capabilities: string[];
   fromSpec?: string;
@@ -174,6 +175,7 @@ function parseArgs(argv: string[]): {
 }
 
 function loadSpecFile(path: string): HarnessSpec {
+  if (!existsSync(path)) throw new Error(`spec file not found: ${path}`);
   const raw = JSON.parse(readFileSync(path, "utf8")) as unknown;
   return validateHarnessSpec(raw);
 }

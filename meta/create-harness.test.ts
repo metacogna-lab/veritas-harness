@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import { mkdtempSync, rmSync, existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createHarness } from "./create-harness.ts";
+import { createHarness, parseArgs } from "./create-harness.ts";
 import { readRegistry, findByName } from "./registry.ts";
 import { readManifest } from "./manifest.ts";
 
@@ -59,4 +59,11 @@ test("createHarness rejects bad names and unknown capabilities", () => {
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+test("parseArgs accepts --from-spec and --capabilities", () => {
+  const a = parseArgs(["my-harness", "--from-spec", "agents/specs/solo.json", "-c", "starter,research"]);
+  expect(a.name).toBe("my-harness");
+  expect(a.fromSpec).toBe("agents/specs/solo.json");
+  expect(a.capabilities).toEqual(["starter", "research"]);
 });

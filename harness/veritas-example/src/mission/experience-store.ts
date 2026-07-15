@@ -142,3 +142,23 @@ export function readEntry(storeRoot: string, missionId: string): ExperienceEntry
   if (!existsSync(path)) return null;
   return JSON.parse(readFileSync(path, "utf8")) as ExperienceEntry;
 }
+
+/**
+ * Update scores.json + entry.json.scores for a mission (P1).
+ * Prefer embedding scores at writeExperienceEntry time when available;
+ * this helper fills scores after a late bench run. Note: plan docs once
+ * named a sibling harness-config.json — config lives in entry.harnessConfig.
+ */
+export function writeExperienceScores(
+  storeRoot: string,
+  missionId: string,
+  scores: BenchmarkScores,
+): ExperienceEntry | null {
+  const entry = readEntry(storeRoot, missionId);
+  if (!entry) return null;
+  const updated: ExperienceEntry = { ...entry, scores };
+  const dir = experienceDir(storeRoot, missionId);
+  writeFileSync(join(dir, "entry.json"), JSON.stringify(updated, null, 2), "utf8");
+  writeFileSync(join(dir, "scores.json"), JSON.stringify(scores, null, 2), "utf8");
+  return updated;
+}

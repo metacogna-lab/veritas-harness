@@ -16,3 +16,4 @@ Moved here as part of plan-completion hygiene. Markdown checkboxes in these file
 Still live under `agents/plans/`: `06-risk-register.md`, `PHASE2.md`, `harness-update-1107.md`, `deployment/`.
 
 | PLAN-FEATURE-1..4 (v0.3 API/jobs/UI/Postgres) | Landed via feat/land-v0.3-api-jobs merge |
+| harness-update-1107 | P1–P6 closed (human-gated); archived after feat/rsi-p1-p6-close |

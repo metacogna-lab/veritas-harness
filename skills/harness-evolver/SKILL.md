@@ -10,6 +10,8 @@ argument-hint: "[--harness <name-or-path>] [--last-n <N>] [--suite <bench-suite>
 
 # Harness Evolver
 
+
+> **Surface tension note:** `src/safety/scope.ts` may appear in editable surfaces for *proposal context*, but applying any safety-plane edit still requires human release; the evolver must never auto-apply safety changes.
 Bi-level outer loop: mines failure patterns from the experience store, proposes
 bounded loadout edits, evaluates candidates against committed bench baselines, and
 surfaces a human-review packet. Nothing is applied autonomously — the human releases.

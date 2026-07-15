@@ -31,18 +31,14 @@ import type { EventBus } from "../telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export interface StartOptions {
-  objective?: string;
-  /** Domain target (e.g. a directory for codebase-audit, hosts for web-recon). */
-  target?: string;
-  /** Validated research plan from ingest; overrides objective/loadout/target/scope. */
-  plan?: ResearchPlan;
-  /** Explicit scope override (used with plan.scope). */
-  scopeOverride?: MissionScope;
-  /** Loadout name; defaults to the first registered loadout. */
+/** Fields common to both mission-intake modes. */
+export interface StartCommon {
+  /** Loadout name; defaults to the first registered loadout (or the plan's loadout). */
   loadout?: string;
   /** Specialist role within the loadout; defaults to the first. */
   role?: string;
+  /** Explicit scope override (used with plan.scope). */
+  scopeOverride?: MissionScope;
   maxSteps?: number;
   /** Approval policy for gated tiers (headless: pass a preAuthorized allowlist). */
   policy?: ApprovalPolicy;
@@ -56,6 +52,30 @@ export interface StartOptions {
   /** Skip source digest (e.g. dry-run or offline mode). */
   skipDigest?: boolean;
 }
+
+/** Intake mode 1: run a validated research plan (authoritative for objective/target/scope). */
+export interface StartFromPlan extends StartCommon {
+  plan: ResearchPlan;
+  objective?: never;
+  target?: never;
+}
+
+/** Intake mode 2: run an ad-hoc objective against an explicit target. */
+export interface StartAdHoc extends StartCommon {
+  objective: string;
+  target: string;
+  plan?: never;
+}
+
+/**
+ * Mission intake (v0.2 B3). A discriminated union: EITHER a `plan` OR an explicit
+ * `objective` + `target`, never an ambiguous merge of both. This makes the old
+ * "plan silently overrides objective/target" defect (M-1) a compile-time impossibility.
+ */
+export type StartInput = StartFromPlan | StartAdHoc;
+
+/** @deprecated Renamed to {@link StartInput} in v0.2 (B3). Kept as an alias. */
+export type StartOptions = StartInput;
 
 export interface StartResult {
   id: string;
@@ -120,34 +140,26 @@ export class ControlPlane {
     return first;
   }
 
-  async start(opts: StartOptions): Promise<StartResult> {
-    // Interface guard (v0.2 M-1): when a plan is supplied it is authoritative for
-    // mission identity. Explicit objective/target that CONTRADICT the plan are a
-    // caller error, not a silent override; consistent duplicates (as the CLI passes)
-    // are fine. `loadout`/`role` remain intentional overrides. See PHASE2 B3 for the
-    // discriminated-union end-state that makes this a type-level guarantee.
-    if (opts.plan) {
-      const conflicts: string[] = [];
-      if (opts.objective !== undefined && opts.objective !== opts.plan.objective) conflicts.push("objective");
-      if (opts.target !== undefined && opts.target !== opts.plan.target) conflicts.push("target");
-      if (conflicts.length > 0) {
-        throw new Error(
-          `start: explicit ${conflicts.join(" and ")} contradict(s) the research plan — ` +
-            `pass a plan OR explicit fields, not conflicting values`,
-        );
-      }
-    }
-
-    const mapped = opts.plan ? planToStartOptions(opts.plan) : undefined;
-    const objective = mapped?.objective ?? opts.objective;
-    const target = mapped?.target ?? opts.target;
-    const loadoutName = mapped?.loadout ?? opts.loadout;
-    const role = mapped?.role ?? opts.role;
+  async start(opts: StartInput): Promise<StartResult> {
     const emit = opts.onEvent ?? (() => {});
 
+    // B3: intake is a discriminated union — a plan OR explicit fields, never both.
+    // Typed callers cannot express the conflict; this defends untyped (cast) callers.
+    if (opts.plan && (opts.objective !== undefined || opts.target !== undefined)) {
+      throw new Error("start: pass a plan OR explicit objective/target, not both");
+    }
+
+    // Resolve mission identity from exactly one source (no silent merge).
+    const plan = opts.plan;
+    const mapped = plan ? planToStartOptions(plan) : undefined;
+    const objective = mapped ? mapped.objective : opts.objective;
+    const target = mapped ? mapped.target : opts.target;
+    const loadoutName = opts.loadout ?? mapped?.loadout;
+    const role = opts.role ?? mapped?.role;
+
     // Plan eval dogma gate — required dimensions must pass before execution.
-    if (opts.plan && !opts.skipPlanEval) {
-      const evalResult = evalPlanWithConfig(opts.plan);
+    if (plan && !opts.skipPlanEval) {
+      const evalResult = evalPlanWithConfig(plan);
       if (!evalResult.pass) {
         throw new PlanEvalError(renderEvalReport(evalResult));
       }
@@ -159,10 +171,10 @@ export class ControlPlane {
     }
 
     // Source digest — summarise plan sources before the agent loop starts.
-    if (opts.plan && !opts.skipDigest && opts.plan.sources.filter((s) => s.kind !== "lesson").length > 0) {
+    if (plan && !opts.skipDigest && plan.sources.filter((s) => s.kind !== "lesson").length > 0) {
       const harnessRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
       await digestSources({
-        plan: opts.plan,
+        plan,
         harnessRoot,
         llm: this.llm,
         onEvent: emit,
@@ -184,7 +196,7 @@ export class ControlPlane {
     this.bus?.emit({
       kind: "mission.start",
       missionId: mission.id,
-      slug: opts.plan?.metadata.slug ?? mission.id,
+      slug: plan?.metadata.slug ?? mission.id,
       objective,
     });
 

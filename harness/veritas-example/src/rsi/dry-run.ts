@@ -7,13 +7,15 @@
  * human-authorized step (see agents/plans/08-eight-plane-and-rsi.md).
  */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { runRsi, summarizeRun } from "./run.ts";
 import type { Proposer } from "./proposal.ts";
 import type { FailureObservation, RegressionSuite } from "./types.ts";
 import { DEFAULT_EDITABLE_SURFACES } from "./editable-surfaces.ts";
 
-const FIXTURES = join(import.meta.dir, "fixtures");
+// node/tsx-compatible (import.meta.dir is Bun-only and undefined under tsx — the CLI runtime).
+const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 /** Deterministic placeholder — emits a review stub, never a real self-edit. */
 const placeholderProposer: Proposer = async (ctx) => ({

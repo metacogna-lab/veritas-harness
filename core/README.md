@@ -2,8 +2,8 @@
 
 `core/` is the **repo-level source of truth for the verified & validated data model**: the
 `ResearchPlan` schema, the Dogma Gate, the plan evaluator, and the ingest compiler contract. It is
-pure, dependency-light TypeScript with no harness-specific or runtime-specific imports, so it can be
-consumed from any runtime (Next.js/Node in `app/`, Bun in the harnesses).
+pure, dependency-light TypeScript with **no external, harness-specific, or runtime-specific imports**,
+so it can be consumed from any runtime (Node, Bun, a future UI client).
 
 | File | Exports | Role |
 |------|---------|------|
@@ -12,11 +12,18 @@ consumed from any runtime (Next.js/Node in `app/`, Bun in the harnesses).
 | `eval.ts` | `evalPlan()`, `evalPlanWithConfig()` | run the gate, return pass/fail + score |
 | `types.ts` | `MissionPayload`, `ApiIngestResult` | ingest request/response envelope |
 | `extract-json.ts` | `parseLastObject()` | robust JSON extraction from model output |
-| `compile-brief.ts` | `serverCompileBrief()` | intent → `ResearchPlan` via LLM (app runtime) |
+| `ingest-contract.ts` | `INGEST_SYSTEM_PROMPT`, `compileBrief(payload, llm)` | runtime-agnostic intent→plan compiler (inject the LLM caller) |
+| `plan-io.ts` | `writePlan()`, `loadPlan()` | persist/read a `research-plan.json` |
+
+> The former `compile-brief.ts` (an `@anthropic-ai/sdk` adapter) was removed with the `app/`
+> teardown (v0.3 Feature 3). The runtime-agnostic `compileBrief` in `ingest-contract.ts` remains and
+> takes an injected LLM caller, so `core/` keeps **zero external dependencies**. The harness API
+> (`harness/veritas-example`, `POST /v1/ingest`) is now the ingest entry point.
 
 ## Consumers and the vendoring rule
 
-- **`app/`** imports these directly via the `@core/*` alias (webpack + tsconfig `paths`).
+- The **harness API** and any **future UI client** reach ingest/plan logic through the HTTP API; the
+  contract in `core/` is the shared source of truth behind it.
 - **`harness/veritas-example/`** carries a **vendored copy** of the same contract
   (`src/ingest/schema.ts`, `src/config/dogma.ts`, `src/resources/plan-eval.ts`). This is deliberate:
   a harness must build and run as a self-contained Docker image that does **not** depend on repo-root

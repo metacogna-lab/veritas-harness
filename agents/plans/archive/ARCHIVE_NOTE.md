@@ -14,3 +14,5 @@ Moved here as part of plan-completion hygiene. Markdown checkboxes in these file
 | 08-eight-plane-and-rsi | Built; autonomous apply remains unauthorized |
 
 Still live under `agents/plans/`: `06-risk-register.md`, `PHASE2.md`, `harness-update-1107.md`, `deployment/`.
+
+| PLAN-FEATURE-1..4 (v0.3 API/jobs/UI/Postgres) | Landed via feat/land-v0.3-api-jobs merge |

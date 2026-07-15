@@ -17,7 +17,8 @@
     "lessons": "bun scripts/lessons.mjs",
     "ingest": "tsx src/ingest/cli.ts",
     "veritas-config": "bun ../../base-scripts/veritas-config.mjs",
-    "analyze": "bun scripts/analyze.mjs"
+    "analyze": "bun scripts/analyze.mjs",
+    "interact": "tsx src/cli.ts interactive"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

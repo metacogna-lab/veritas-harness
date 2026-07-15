@@ -153,6 +153,48 @@ describe("launchVeritas", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  test("empty argv launches interactive", async () => {
+    const root = mkdtempSync(join(tmpdir(), "veritas-cli-bare-"));
+    try {
+      writeFileSync(
+        join(root, "harnesses.json"),
+        JSON.stringify({
+          version: 1,
+          harnesses: [
+            {
+              name: "veritas-example",
+              index: 1,
+              path: "harness/veritas-example",
+              capabilities: ["research"],
+              planes: [...base.planes],
+              createdAt: "2026-07-15",
+              status: "active",
+            },
+          ],
+        }),
+      );
+      const cliDir = join(root, "harness/veritas-example/src");
+      mkdirSync(cliDir, { recursive: true });
+      writeFileSync(join(cliDir, "cli.ts"), "// stub\n");
+
+      const calls: { args: string[] }[] = [];
+      const result = await launchVeritas({
+        root,
+        argv: [],
+        spawn: async (_path, args) => {
+          calls.push({ args });
+          return 0;
+        },
+      });
+
+      expect(result.code).toBe(0);
+      expect(result.argv).toEqual(["interactive"]);
+      expect(calls[0]?.args).toEqual(["interactive"]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
 
 test("repoRoot points at the meta parent", () => {

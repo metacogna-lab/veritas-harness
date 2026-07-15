@@ -27,6 +27,49 @@ bun run dev report <mission-id>
 
 ---
 
+## Interactive Mode
+
+Claude Code–style planning shell — interaction is the centerpiece. Natural language drafts a research plan; slash commands structure eval/write/start. Headless one-shot verbs are unchanged for Docker/Modal/CI.
+
+```bash
+# From repo root (TTY)
+bun run veritas
+
+# From harness
+cd harness/veritas-example
+bun run interact
+# or explicit verb: tsx src/cli.ts interactive
+# or bare TTY with no verb enters the shell
+```
+
+Typical session:
+
+```text
+▸ veritas   I want to audit the auth scope gate and produce a falsifiable plan
+▸ veritas   /sources ./research/raw/auth
+▸ veritas   /eval
+▸ veritas   /write
+▸ veritas   /start
+▸ veritas   /quit
+```
+
+| Slash | Purpose |
+|-------|---------|
+| `/help` | Commands + tips |
+| `/ingest [path]` | Compile a brief (or interview) into a draft |
+| `/sources <dir>` | Stage docs into the draft |
+| `/plan [--json]` | Show draft summary |
+| `/eval` | Dogma gate on draft |
+| `/write` | Persist plan only if required dogma passes |
+| `/digest` | Digest sources for written plan |
+| `/start` | Run mission (stdin approver for gated tools) |
+| `/status` `/report` | Control-plane status/report |
+| `/loadouts` `/clear` `/quit` | Utility |
+
+Non-TTY bare argv still prints usage and exits 2 (never hangs).
+
+---
+
 ## Repo Layout
 
 ```

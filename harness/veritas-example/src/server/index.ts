@@ -13,6 +13,9 @@ import { getDb, closeDb, isDbConfigured } from "../persistence/db.ts";
 import { runMigrations } from "../persistence/migrate.ts";
 import { startSession, applyRetention, environment } from "../persistence/session.ts";
 import { createApp } from "./app.ts";
+import { PgJobQueue } from "../jobs/queue.ts";
+import { JobRunner } from "../jobs/runner.ts";
+import { makeMissionExecutor, makeIngestExecutor } from "../jobs/executor.ts";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -45,6 +48,23 @@ async function main(): Promise<void> {
   // Telemetry bus shared by missions + SSE + Postgres sink.
   const telem = telemetryFromEnv(undefined, db && sessionId ? { db, sessionId } : undefined);
 
+  // Job queue + autonomous runner (Feature 2) — only with a DB (durable queue).
+  let queue;
+  let runner: JobRunner | undefined;
+  if (db && sessionId) {
+    queue = new PgJobQueue(db, sessionId);
+    if (process.env.RUN_WORKER !== "false") {
+      runner = new JobRunner({
+        queue,
+        runMission: makeMissionExecutor({ buildLLM, store, bus: telem?.bus }),
+        runIngest: makeIngestExecutor({ buildLLM, store, bus: telem?.bus }, HARNESS_ROOT),
+        onEvent: (l) => process.stdout.write(`${l}\n`),
+      });
+      runner.start();
+      process.stdout.write("server: autonomous job runner started\n");
+    }
+  }
+
   const app = createApp({
     buildLLM,
     store,
@@ -52,16 +72,16 @@ async function main(): Promise<void> {
     missionsDir: HARNESS_ROOT,
     bus: telem?.bus,
     db,
+    queue,
     sessionId,
   });
-
-  // Feature 2 worker starts here when wired (RUN_WORKER !== "false").
 
   const server = Bun.serve({ port: PORT, fetch: app.fetch });
   process.stdout.write(`server: listening on :${PORT} (provider=${config.defaultProvider})\n`);
 
   const shutdown = async () => {
     server.stop();
+    await runner?.stop();
     telem?.detach();
     await closeDb();
     process.exit(0);

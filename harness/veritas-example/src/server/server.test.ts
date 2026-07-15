@@ -108,10 +108,9 @@ describe("Feature 1 — API layer", () => {
     expect(res.status).toBe(400);
   });
 
-  it("async=true WITH a stub queue → 202 + jobId", async () => {
-    const app = createApp(
-      deps({ queue: { enqueueMission: async () => ({ id: "job_1" }), get: async () => undefined, list: async () => [], enqueue: async () => ({ id: "job_1" }) } }),
-    );
+  it("async=true WITH a queue → 202 + jobId", async () => {
+    const { InMemoryJobQueue } = await import("../jobs/queue.ts");
+    const app = createApp(deps({ queue: new InMemoryJobQueue() }));
     const res = await app.request("/v1/missions?async=true", {
       method: "POST",
       headers: { "content-type": "application/json" },

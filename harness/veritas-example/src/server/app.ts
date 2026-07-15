@@ -17,6 +17,7 @@ import { evalPlanWithConfig } from "../resources/plan-eval.ts";
 import { defaultLoadouts } from "../agent/loadouts.ts";
 import { loadResearchPlan } from "../resources/research-plan.ts";
 import { streamMissionEvents, SSE_HEADERS } from "./sse.ts";
+import { jobRoutes } from "./routes/jobs.ts";
 import type { ServerDeps } from "./deps.ts";
 
 const ingestSchema = z.object({
@@ -96,8 +97,8 @@ export function createApp(deps: ServerDeps): Hono {
     // Async → enqueue a job (Feature 2). Requires a queue to be wired.
     if (isAsync) {
       if (!deps.queue) return err(c, 400, "async requested but no job queue is configured");
-      const job = await deps.queue.enqueueMission({ planPath });
-      return c.json({ ok: true, jobId: job.id, status: "queued" }, 202);
+      const job = await deps.queue.enqueue("mission", { kind: "mission", planPath, loadout, maxSteps });
+      return c.json({ ok: true, jobId: job.id, status: job.status }, 202);
     }
 
     try {
@@ -132,6 +133,9 @@ export function createApp(deps: ServerDeps): Hono {
     if (!deps.bus) return err(c, 400, "telemetry bus not configured");
     return new Response(streamMissionEvents(deps.bus, c.req.param("id")), { headers: SSE_HEADERS });
   });
+
+  // ── jobs (Feature 2) — mounted only when a queue is configured ───────────────
+  if (deps.queue) app.route("/", jobRoutes(deps.queue));
 
   return app;
 }

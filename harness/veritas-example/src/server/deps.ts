@@ -8,17 +8,7 @@ import type { MissionStore } from "../control/store.ts";
 import type { HarnessConfig } from "../config/index.ts";
 import type { EventBus } from "../telemetry/index.ts";
 import type { Db } from "../persistence/db.ts";
-
-/**
- * Minimal async-job surface the API needs (Feature 2 implements it). Declared here so
- * Feature 1 has no forward dependency on the jobs module and stays independently green.
- */
-export interface JobEnqueuer {
-  enqueueMission(spec: { planPath?: string; plan?: unknown }): Promise<{ id: string }>;
-  get(id: string): Promise<unknown | undefined>;
-  list(status?: string): Promise<unknown[]>;
-  enqueue(type: string, spec: unknown): Promise<{ id: string }>;
-}
+import type { JobQueue } from "../jobs/queue.ts";
 
 export interface ServerDeps {
   /** Build an LLM from the active provider chain (provider-dependent behaviour). */
@@ -34,7 +24,7 @@ export interface ServerDeps {
   /** Optional Postgres db (health check + job queue). */
   db?: Db;
   /** Optional job queue (Feature 2) for async missions + /v1/jobs. */
-  queue?: JobEnqueuer;
+  queue?: JobQueue;
   /** Current session id (for enqueuing jobs). */
   sessionId?: string;
 }

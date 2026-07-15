@@ -1,7 +1,29 @@
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: veritas
+      POSTGRES_USER: veritas
+      POSTGRES_PASSWORD: veritas
+    ports:
+      - "5432:5432"
+    volumes:
+      - veritas-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U veritas -d veritas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   veritas:
     build: .
     env_file: .env
+    environment:
+      DATABASE_URL: postgres://veritas:veritas@postgres:5432/veritas
+      ENVIRONMENT: ${ENVIRONMENT:-prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./missions:/app/missions
       - veritas-runs:/app/.veritas
@@ -10,3 +32,4 @@ services:
 volumes:
   veritas-runs:
   veritas-experience:
+  veritas-pg:

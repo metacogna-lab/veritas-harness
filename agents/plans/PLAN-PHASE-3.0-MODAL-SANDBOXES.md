@@ -1,6 +1,7 @@
 # Phase 3.0 — Goal-Oriented Modal Sandboxes
 
 **Status:** PLAN — approved for execution via outer loops below
+**Revised:** 2026-07-15 (review-loop iteration 1) — v0.3 Features F1 (API), F2 (job runner), F3 (UI teardown), F4 (Postgres) all landed on the base branch (`e872147`, `55d400a`, `045d098`, `f8c0869`); former Loops A/B deleted, goal loop now builds directly on `src/server/` + `src/jobs/`; new Loop C added for root↔harness creation/execution separation and spine dedup (§9)
 **Base branch:** `feat/v0.3-api-jobs-postgres` (integration branch for 3.0: `feat/v3.0-sandbox-providers`)
 **Supersedes:** the Python `modal/runner.py` sketch in `docs/PHASE2_MODAL_EXECUTION.md` (design intent preserved; implementation moves to the TypeScript Modal SDK behind `SandboxProvider`)
 **Correction to source directive:** the second provider is **Modal** (modal.com Sandboxes), not "Modular"/Firecracker/gVisor/Wasm. Modal runs gVisor-isolated sandboxes as a managed service and has a first-class TS SDK, so we stay in the bun/TypeScript stack.
@@ -15,9 +16,9 @@ Verified against `feat/v0.3-api-jobs-postgres` (2026-07-15):
 |---|---|---|
 | "Docker-based imperative execution model" | Docker **packages** the harness (`harness/veritas-example/Dockerfile`, `ENTRYPOINT ["bun","run","dev"]`) and co-locates Postgres (`docker-compose.yml`). Missions execute **in-process** via `ControlPlane.start()` (`src/control/plane.ts`) | `DockerProvider` = formalize container-per-run execution of the existing image. The in-process path stays the default (`LocalProvider`) so nothing breaks |
 | "Where stdout is collected" | Missions don't spawn subprocesses; telemetry is structured `HarnessEvent`s on an eventemitter3 bus → `StructuredLogger` (NDJSON `events.ndjson`) + `PgSink` (`src/telemetry/`) | Providers must normalize raw container stdout/stderr **into** `HarnessEvent`s; the bus is the single spine |
-| "Introduce the new state machine" | Exists partially: `MissionStatus` = created/running/done/error/held; planned jobs table = queued/running/done/error/held (`PLAN-FEATURE-2-JOB-RUNNER.md`) | Goal-loop states **extend** the jobs status enum; no parallel state system |
-| "Event dispatcher" (step 5) | Already shipped (telemetry W4) | Step 5 = add a `ReportingSink` subscriber + report renderer only |
-| "New API route" trigger | Feature 1 (hono server) and Feature 2 (job runner) are **planned, not built**; only Next.js plan-compile route exists (`app/src/app/api/v1/missions/route.ts`) | Features 1+2 become parallel prerequisite loops (they were already scoped for v0.3) |
+| "Introduce the new state machine" | Exists: `MissionStatus` = created/running/done/error/held; **jobs queue implemented** (`src/jobs/{types,queue,runner,executor}.ts`, F2 `55d400a`) | Goal-loop states **extend** the jobs status enum; no parallel state system |
+| "Event dispatcher" (step 5) | Already shipped (telemetry W4: `src/telemetry/{bus,logger,pg-sink,reader}.ts`) | Step 5 = add a `ReportingSink` subscriber + report renderer only |
+| "New API route" trigger | **Implemented**: hono server `src/server/{index,app,deps,sse}.ts` + `routes/jobs.ts` (`bun run serve`, F1 `e872147`); Next.js `app/` torn down to a README placeholder (F3 `045d098`) — the API is the only interface | `POST /v1/goals` is added to the existing hono app; no UI work anywhere in Phase 3.0 |
 | Sandbox/goal-loop code exists? | `git grep` for SandboxProvider/goal/firecracker/gvisor = **zero hits** | Phase 3.0 is net-new; Strategy Pattern cutover is safe |
 
 Existing touchpoints to wrap (do not mutate):
@@ -25,16 +26,20 @@ Existing touchpoints to wrap (do not mutate):
 - `harness/veritas-example/src/control/store.ts` — FS `MissionStore` (`<runsDir>/<id>.json`)
 - `harness/veritas-example/src/telemetry/index.ts` — `telemetryFromEnv()`, bus wiring
 - `harness/veritas-example/src/persistence/{schema,repo,db,migrate,session}.ts` — Feature 4 (DONE)
+- `harness/veritas-example/src/server/{index,app,deps,sse}.ts`, `routes/jobs.ts` — Feature 1 (DONE)
+- `harness/veritas-example/src/jobs/{types,queue,runner,executor}.ts` — Feature 2 (DONE)
 - `harness/veritas-example/Dockerfile`, `docker-compose.yml` — image + postgres
 - `core/{schema,eval,dogma,plan-io,compile-brief}.ts` — shared domain
+
+**Plans-completeness audit (2026-07-15):** every doc in `agents/plans/` is done — phases 00–08 (BASIC→INT→ADV→Skills→Consumability→Ingest→8-plane/RSI; all `feat/adv-*`, `feat/skills`, `feat/consumability`, `feat/harness-consolidate` branches merged), PHASE2.md (v0.2 workstreams merged), and PLAN-FEATURE-1/2/3/4 (commits above). The only open plan is this one. No unmerged remote branch carries unlanded work (`git branch -a --no-merged feat/v0.3-api-jobs-postgres` returns only this plan branch).
 
 ## 2. Ground rules (every loop, non-negotiable)
 
 1. **No breaking changes.** Default behavior with no new flags/config = today's in-process execution. All Phase 2.0 CLI verbs, tests, and API contracts unchanged. Enforced by the Regression Eval gate (§5.1).
 2. **Meta-harness stays complete.** Both registered harnesses (`harnesses.json` #1 veritas-research, #2 veritas-example) keep green `bun test` + `bun run doctor`; the 8 planes and 8 safety invariants (THOR.md) hold. Sandbox providers live in the **Execution Plane**; the goal loop lives in the **Control/Orchestration Planes** — no new plane, no forked agent loop (invariant #8).
 3. **Evals at every phase.** No loop merges without its eval battery green (§5) plus the standing gates: `bun test` (research 178 / example 243+), `bun run doctor`, `bun run verify-claims`, `bun run bench`.
-4. **Git discipline per loop:** branch off `feat/v3.0-sandbox-providers` → TDD → evals green → commit (conventional format) → merge back to `feat/v3.0-sandbox-providers` → push. Never push `main`/`state/consolidation-plan` without explicit human confirmation.
-5. **Docker before Modal.** Loop D (Docker provider proven end-to-end) is a hard gate before any Modal work merges (Loop M may be *drafted* in parallel but not merged).
+4. **Git discipline per loop:** branch off `feat/v3.0-sandbox-providers` → TDD → evals green → **run `/simplify` on the changed code before every commit** (reuse/simplification/efficiency pass; apply its fixes, re-run gates) → commit (conventional format) → merge back to `feat/v3.0-sandbox-providers` → push. Never push `main`/`state/consolidation-plan` without explicit human confirmation.
+5. **Docker before Modal.** Loops 0–1 (Docker proven end-to-end: containerized int-smoke, then `DockerProvider` conformance) are a hard gate before any Modal work merges (Loop M may be *drafted* in parallel but not merged).
 6. **Safety invariants in sandboxes:** unattended runs fail-safe deny gated tiers (#2); `requireHumanRelease` parks jobs as `held`/`AWAITING_RELEASE` — a sandbox exit is not a release (#5); `verify-claims` runs before artifacts are sealed (#6).
 7. **Tools:** use the repo's meta-skills (`skills/harness-*`), `.claude/commands/`, and Modal's agent skills (`modal skills install --claude -y`, installed in Loop 0) rather than hand-rolling Modal knowledge.
 
@@ -71,7 +76,7 @@ interface SandboxProvider {
 
 **State machine** — one enum, superset of existing jobs statuses (old values remain valid; migration is additive):
 `PENDING(≈queued) → EVALUATING → EXECUTING(≈running) → VERIFYING → COMPLETED(≈done) | FAILED(≈error) | AWAITING_RELEASE(≈held) | TIMEOUT | MAX_STEPS_REACHED`.
-Loop: EVALUATING picks next command from Goal; EXECUTING runs it via the selected provider; VERIFYING checks output/artifacts against Goal (evidence-gated, invariant #3); loop back to EVALUATING until goal met / budget exhausted. Opt-in only: CLI `--goal "..."` on a new `goal` verb, or `POST /v1/goals` (after Loop A).
+Loop: EVALUATING picks next command from Goal; EXECUTING runs it via the selected provider; VERIFYING checks output/artifacts against Goal (evidence-gated, invariant #3); loop back to EVALUATING until goal met / budget exhausted. Opt-in only: CLI `--goal "..."` on a new `goal` verb, or `POST /v1/goals` on the existing hono server.
 
 ## 4. Outer loops
 
@@ -100,20 +105,20 @@ Branch: `feat/v3.0-loop1-provider-interface`
 - Build **Eval 1 (Regression)** and **Eval 2 (Conformance)** harnesses now (§5); run conformance over local+docker.
 - GATE: Eval 1 zero-drift vs Loop 0 baseline; Eval 2 local↔docker parity; standing gates. SHIP.
 
-### Parallel wave — after Loop 1 merges, run Loops A, B, M-draft concurrently
-Use one git worktree + one subagent per loop; each owns disjoint directories to avoid merge conflicts. Merge order into the integration branch: **A → B → G → M → R** (rebase later loops on earlier merges).
+### Parallel wave — after Loop 1 merges, run Loops C and M-draft concurrently
+Use one git worktree + one subagent per loop; each owns disjoint directories to avoid merge conflicts. Merge order into the integration branch: **C → G → M → R** (rebase later loops on earlier merges).
 
-### Loop A — Feature 1: HTTP API layer *(parallel; dirs: `src/server/`)*
-Branch: `feat/v3.0-loopA-api-layer` — executes existing `agents/plans/PLAN-FEATURE-1-API-LAYER.md` unchanged: hono server (`src/server/{index,app}.ts`, `routes/*`), `/health`, `/v1/provider`, `/v1/loadouts`, `/v1/ingest`, `/v1/missions` (+`:id`, `:id/report`, `:id/events` SSE from the real bus, replacing the `app/` stub).
-- GATE: route tests + Eval 1 (API contract additions only, zero changes to existing behavior). SHIP.
+### Loop C — Root↔harness separation & spine dedup *(parallel with M-draft; dirs: `core/`, `meta/`, `harness/*/src` shared-spine files, `harness/INSTALLATION.md`)*
+Branch: `feat/v3.0-loopC-separation` — executes the §9 audit findings:
+- **Creation logic out of `harness/`**: move `harness/INSTALLATION.md` content into root docs (`docs/` or `guides/`) / `meta/`; after this, `harness/` contains only executable harnesses (`veritas-research`, `veritas-example`). `new-loadout` stays (loadout registration is domain *extension*, execution-side per invariant #8).
+- **Single-source the spine**: extract the 41 byte-identical `src/` files (audited 2026-07-15: safety/, tools/, evidence/, llm/ core, mission/ core, parse/, planes) into a root workspace package (`core/spine/`, imported by both harnesses via bun workspaces). Diverged files (11, e.g. `control/plane.ts` +176 in example) stay per-harness but must import shared parts. `meta/templates/harness-template/` shrinks to thin scaffolding that depends on `core/spine` instead of carrying a third copy.
+- **Drift guard**: extend the existing planes drift test to fail CI if a harness re-declares a file that `core/spine` exports.
+- Do this **before** Loop G so the goal loop lands once, in shared code, not in a fork.
+- GATE: both harnesses' full test suites unchanged-green (178/243+), `bun run create-harness` smoke (scaffold a throwaway harness, run its tests, deregister), Eval 1, standing gates. SHIP.
 
-### Loop B — Feature 2: Job runner *(parallel; dirs: `src/jobs/`)*
-Branch: `feat/v3.0-loopB-job-runner` — executes `agents/plans/PLAN-FEATURE-2-JOB-RUNNER.md`: `src/jobs/{types,queue,runner}.ts`, atomic claim via `FOR UPDATE SKIP LOCKED`, worker loop, `held` parking (never auto-release, invariant #5). Additive status-enum migration to the superset in §3.
-- GATE: queue tests incl. concurrent-claim + crash-recovery; Eval 1. SHIP.
-
-### Loop G — Goal-oriented control loop *(serial; needs 1, A, B merged)*
+### Loop G — Goal-oriented control loop *(serial; needs 1 and C merged)*
 Branch: `feat/v3.0-loopG-goal-loop` — dirs: `src/goal/`
-- `machine.ts` state machine as a job type `"goal"` on the Feature 2 queue; `evaluator.ts` uses the existing `LLMBackbone` to pick the next command and to verify output/artifacts against the Goal; every verification claim must cite a tool observation (evidence gate) and hard budgets enforced (`max_steps`, `timeout_seconds` → TIMEOUT / MAX_STEPS_REACHED).
+- `machine.ts` state machine as a job type `"goal"` on the **existing** jobs queue (`src/jobs/types.ts` — additive status-enum extension per §3); `evaluator.ts` uses the existing `LLMBackbone` to pick the next command and to verify output/artifacts against the Goal; every verification claim must cite a tool observation (evidence gate) and hard budgets enforced (`max_steps`, `timeout_seconds` → TIMEOUT / MAX_STEPS_REACHED).
 - Opt-in triggers only: CLI verb `goal --goal "..." [--provider docker] [--max-steps N]` + `POST /v1/goals`; zero changes to existing verbs/routes.
 - Provider-agnostic: goal loop calls `SandboxProvider` only — never docker/modal APIs directly.
 - Build **Eval 3 (Agentic loop)**; GATE: Eval 3 + Eval 1 + standing gates. SHIP.
@@ -166,11 +171,11 @@ Required blocks: `metadata`, `goal_context`, `execution_summary`, `timeline`, `a
 ## 7. Dependency & parallelism map
 
 ```
-Loop 0 ──► Loop 1 ──┬─► Loop A (API)      ─┐
- (Docker gate)      ├─► Loop B (jobs)     ─┼─► Loop G (goal loop) ─┬─► Loop M (Modal; merge-gated on 0+G)
-                    └─► Loop M draft ······┘                       ├─► Loop R (reporting)
-                                                                   └────────► Loop Z (closure, PR, human review)
+Loop 0 ──► Loop 1 ──┬─► Loop C (separation/dedup) ─► Loop G (goal loop) ─┬─► Loop M (Modal; merge-gated on 0+G)
+ (Docker gate)      └─► Loop M draft ····································┤─► Loop R (reporting)
+                                                                         └─► Loop Z (closure, PR, human review)
 ```
+(F1 API, F2 jobs, F3 UI-teardown, F4 Postgres already landed on the base branch — no loops needed.)
 
 ## 8. Risks
 
@@ -180,5 +185,19 @@ Loop 0 ──► Loop 1 ──┬─► Loop A (API)      ─┐
 | Provider divergence (docker vs modal semantics) | Conformance eval is a merge gate for every later loop |
 | Goal-loop runaway (steps/tokens) | `max_steps` + `timeout_seconds` budgets enforced in machine; TIMEOUT/MAX_STEPS_REACHED are first-class terminal states |
 | Modal creds absent in CI | guard-skip pattern (as `DATABASE_URL`); conformance runs local+docker minimum |
-| Parallel loops collide | disjoint directory ownership per loop; fixed merge order A→B→G→M→R; rebase before merge |
+| Parallel loops collide | disjoint directory ownership per loop; fixed merge order C→G→M→R; rebase before merge |
+| Spine dedup (Loop C) destabilizes both harnesses at once | 41 extracted files are byte-identical today — extraction is mechanical; both suites must stay green in the same commit; drift test locks it |
 | Meta-harness incompleteness sneaks in | Loop Z re-runs full battery on **both** harnesses + registry pipeline check |
+
+## 9. Root↔harness separation audit (2026-07-15, review-loop iteration 1)
+
+Rule: **meta/creation logic lives at the root (`meta/`, `core/`, `base-scripts/`, root `skills/`); `harness/` contains only executable harnesses.** Findings on `feat/v0.3-api-jobs-postgres`:
+
+| Finding | Evidence | Disposition (Loop C) |
+|---|---|---|
+| 8-plane spine is copy-forked **three ways** | Of 52 shared `src/` paths between `harness/veritas-research` and `harness/veritas-example`, **41 are byte-identical** (safety, tools, evidence, parse, llm core, mission core, planes); 11 diverged (`control/plane.ts` +176/-23). `meta/templates/harness-template/src/` carries a third ~16-file copy | Extract identical files → `core/spine/` workspace package; harnesses + template depend on it; drift test guards regression (invariant #8: compose, don't fork) |
+| Creation doc inside `harness/` | `harness/INSTALLATION.md` covers create-harness/scaffold usage | Move to root `docs/`/`guides/`; `harness/` READMEs link to it |
+| Interface asymmetry between harnesses | research has `.claude/commands/` (9 cmds) + no `scripts/`; example has `scripts/*.mjs` (7) + `skills/` + no `.claude/` | Normalize in Loop C: shared script logic → `base-scripts/` (pattern already proven by `doctor.mjs`/`veritas-config.mjs`); per-harness wrappers stay thin |
+| Root duplication already resolved elsewhere | `app/` ingest duplication removed by F3 (`045d098`); `base-scripts/` already shares doctor/config | No action — confirms the direction |
+
+Non-findings (correct as-is): `harness/veritas-example/skills/{harness-analysis,harness-ingest}` are execution-side domain skills; `new-loadout` is domain extension, not harness creation; root `skills/harness-*` (8 generic meta-skills) and `meta/` pipeline correctly live at root.

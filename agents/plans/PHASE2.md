@@ -1,7 +1,7 @@
 # PHASE2 — Interface Boundaries for Veritas 0.2
 
 **Authored:** 2026-07-12
-**Status:** Design review — proposes the boundary contracts for 0.2 (TBC)
+**Status:** Largely landed (2026-07-15 W1–W5; H-4 LoadoutRegistry codegen closed on feat/h4-from-spec-loadouts). W6 Modal remains staged.
 **Method:** zoom-simplify L1→L4 applied as an analytical lens; grounded against current source.
 **Companion:** severity-ranked issues in [`docs/veritas-v0.2.md`](../../docs/veritas-v0.2.md).
 

@@ -1,0 +1,30 @@
+{
+  "name": "solo-hackathon",
+  "capabilities": ["starter", "research"],
+  "loadouts": [
+    {
+      "name": "solo-hackathon",
+      "adapter": "path",
+      "toolNames": ["read_file"],
+      "specialists": [
+        {
+          "role": "facilitator",
+          "focus": "Guide a single-person hackathon: frame the problem, constraints, and success criteria (Step 1), then keep the run on rails."
+        },
+        {
+          "role": "scout",
+          "focus": "Survey existing code, docs, and constraints inside scope before the build sprint."
+        },
+        {
+          "role": "builder",
+          "focus": "Translate the framed problem into the smallest shippable vertical slice."
+        }
+      ]
+    }
+  ],
+  "tools": [{ "name": "read_file", "riskTier": "safe" }],
+  "scopeDefaults": {
+    "hosts": [],
+    "paths": ["."]
+  }
+}

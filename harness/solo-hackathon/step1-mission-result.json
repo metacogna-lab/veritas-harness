@@ -1,0 +1,12 @@
+{
+  "process": "step1-mission",
+  "step": 1,
+  "title": "Problem framing",
+  "status": "ok",
+  "answer": "Step 1 framed: solo builder ships one sitting-sized artefact under stated constraints; success = demo-ready output matching HACKATHON.md criteria.",
+  "steps": 2,
+  "observations": 1,
+  "findings": 0,
+  "loadout": "solo-hackathon",
+  "note": "AgentResult.stopped=true means max-steps; success inferred from answer + observations"
+}

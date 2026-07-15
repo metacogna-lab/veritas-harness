@@ -135,14 +135,16 @@ describe("ControlPlane lifecycle", () => {
     expect(result.status).toBe("answered");
   });
 
-  test("start rejects an explicit objective that contradicts the plan (M-1)", async () => {
+  test("start rejects mixing a plan with explicit objective/target (B3 + M-1)", async () => {
     const store = await tmpStore();
     const planPath = join(import.meta.dir, "../../missions/example-slug/research-plan.json");
     const plan = loadResearchPlan(planPath);
     const plane = new ControlPlane({ llm: scriptedLLM([{ text: "x", usage: zero }]), store });
+    // The discriminated union (B3) makes this a compile error for typed callers; the
+    // `as never` cast exercises the defensive runtime guard for untyped/cast callers.
     await expect(
-      plane.start({ plan, objective: "a totally different objective", skipPlanEval: true, skipDigest: true }),
-    ).rejects.toThrow("contradict");
+      plane.start({ plan, objective: "a totally different objective", skipPlanEval: true, skipDigest: true } as never),
+    ).rejects.toThrow("not both");
   });
 
   test("error path: an LLM failure marks the mission status error", async () => {

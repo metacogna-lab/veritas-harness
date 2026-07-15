@@ -2,6 +2,8 @@
 
 From a fresh clone to a confirmed finding in under ten minutes.
 
+> Prefer the interactive shell for planning: `bun run interact` (or `bun run veritas` from the repo root). Describe an objective in plain text, `/eval`, `/write`, then `/start`. Headless `ingest` and one-shot start remain for CI and scripts.
+
 ---
 
 ## 1. Install and verify

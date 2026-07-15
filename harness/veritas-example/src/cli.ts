@@ -2,6 +2,7 @@
 /**
  * Control-plane CLI — the human front door.
  *
+ *   veritas interactive          # Claude Code–style planning shell (TTY)
  *   veritas start "<objective>" --target <t> [--loadout <name>] [--role <r>]
  *                               [--plan <research-plan.json>] [--max-steps <n>]
  *   veritas ingest --input <NEW.md> [--slug <slug>]
@@ -33,6 +34,7 @@ import { telemetryFromEnv } from "./telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { printBanner } from "./banner.ts";
+import { runInteractive } from "./interactive/index.ts";
 
 const DEFAULT_RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 
@@ -49,6 +51,13 @@ export interface CliDeps {
   runsDir?: string;
   /** Whether to print the banner (default: process.stdout.isTTY). */
   banner?: boolean;
+  /**
+   * Treat stdout as a TTY for bare-argv interactive entry.
+   * Defaults to process.stdout.isTTY — CI/non-TTY keeps usage error (never hangs).
+   */
+  isTTY?: boolean;
+  /** Injectable line reader for interactive mode (tests). */
+  ask?: (prompt: string) => Promise<string | null>;
 }
 
 interface CliContext {
@@ -248,9 +257,26 @@ export async function run(deps: CliDeps): Promise<number> {
   const print = deps.print ?? ((l: string) => process.stdout.write(`${l}\n`));
   const printErr = deps.printErr ?? ((l: string) => process.stderr.write(`${l}\n`));
   const showBanner = deps.banner ?? Boolean(process.stdout.isTTY);
-  if (showBanner) printBanner();
+  const isTTY = deps.isTTY ?? Boolean(process.stdout.isTTY);
+  const buildLLM = deps.buildLLM ?? defaultBuildLLM;
 
   const [verb, ...rest] = deps.argv;
+
+  // Bare TTY / explicit interactive → Claude Code–style planning shell.
+  // Non-TTY bare argv keeps usage error so CI/Docker never hang on stdin.
+  if ((!verb && isTTY) || verb === "interactive") {
+    return runInteractive({
+      print,
+      printErr,
+      buildLLM,
+      runsDir: deps.runsDir ?? DEFAULT_RUNS_DIR,
+      banner: showBanner,
+      ask: deps.ask,
+    });
+  }
+
+  if (showBanner) printBanner();
+
   const { positionals, flags } = parseFlags(rest);
   const usage = (msg: string): number => {
     printErr(`usage: veritas ${msg}`);
@@ -258,7 +284,11 @@ export async function run(deps: CliDeps): Promise<number> {
   };
 
   const handler = verb ? HANDLERS[verb] : undefined;
-  if (!handler) return usage("start | eval | digest | ingest | status | report | loadouts | rsi");
+  if (!handler) {
+    return usage(
+      "interactive | start | eval | digest | ingest | status | report | loadouts | rsi",
+    );
+  }
 
   const ctx: CliContext = {
     rest,
@@ -267,7 +297,7 @@ export async function run(deps: CliDeps): Promise<number> {
     print,
     printErr,
     store: new MissionStore(deps.runsDir ?? DEFAULT_RUNS_DIR),
-    buildLLM: deps.buildLLM ?? defaultBuildLLM,
+    buildLLM,
     usage,
   };
   return handler(ctx);

@@ -5,6 +5,7 @@
  * Usage (from repo root):
  *   bun run veritas -- <verb> [flags…]
  *   veritas <verb> [flags…]          # after `bun link` / bin install
+ *   veritas                          # bare TTY → interactive planning shell
  *
  * Harness selection (first match wins):
  *   1. --harness <name>
@@ -124,8 +125,10 @@ export async function launchVeritas(opts: {
       return await proc.exited;
     });
 
-  const code = await spawn(cliPath, rest, opts.root);
-  return { code, harness, cliPath, argv: rest };
+  // Bare launch → interactive shell (Claude Code–style planning + ingest).
+  const childArgs = rest.length === 0 ? ["interactive"] : rest;
+  const code = await spawn(cliPath, childArgs, opts.root);
+  return { code, harness, cliPath, argv: childArgs };
 }
 
 async function main(): Promise<number> {
@@ -138,7 +141,7 @@ async function main(): Promise<number> {
   } catch (err) {
     process.stderr.write(`veritas: ${(err as Error).message}\n`);
     process.stderr.write(
-      "usage: veritas [--harness <name>] <start|eval|digest|ingest|status|report|loadouts|rsi> [flags…]\n",
+      "usage: veritas [--harness <name>] [interactive|start|eval|digest|ingest|status|report|loadouts|rsi] [flags…]\n",
     );
     return 2;
   }

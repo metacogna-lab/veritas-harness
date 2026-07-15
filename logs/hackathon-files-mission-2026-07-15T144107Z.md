@@ -1,0 +1,51 @@
+# Hackathon files mission
+
+- **datetime:** 2026-07-15T144107Z
+- **branch:** `test/solo-hackathon-harness`
+- **exit:** 0
+
+```json
+{
+  "process": "hackathon-files-mission",
+  "objective": "create all hackathon files",
+  "status": "ok",
+  "answer": "Hackathon kit complete (9 files). Ready for Step 2–4 using MVP.md.",
+  "steps": 3,
+  "observations": 2,
+  "expected": [
+    "PROBLEM.md",
+    "CONSTRAINTS.md",
+    "SUCCESS.md",
+    "MVP.md",
+    "TIMELINE.md",
+    "CHECKLIST.md",
+    "DEMO.md",
+    "AGENDA.md",
+    "DECISIONS.md"
+  ],
+  "present": [
+    "AGENDA.md",
+    "CHECKLIST.md",
+    "CONSTRAINTS.md",
+    "DECISIONS.md",
+    "DEMO.md",
+    "MVP.md",
+    "PROBLEM.md",
+    "SUCCESS.md",
+    "TIMELINE.md"
+  ],
+  "missing": [],
+  "sizes": {
+    "PROBLEM.md": 1120,
+    "CONSTRAINTS.md": 1108,
+    "SUCCESS.md": 944,
+    "MVP.md": 785,
+    "TIMELINE.md": 671,
+    "CHECKLIST.md": 817,
+    "DEMO.md": 1010,
+    "AGENDA.md": 426,
+    "DECISIONS.md": 715
+  },
+  "loadout": "solo-hackathon"
+}
+```

@@ -1,0 +1,24 @@
+{
+  "name": "solo-hackathon",
+  "index": 3,
+  "description": "Harness #3 — generated from HarnessSpec \"solo-hackathon\" (H-4).",
+  "capabilities": [
+    "starter",
+    "research"
+  ],
+  "planes": [
+    "provider",
+    "safety",
+    "verification",
+    "memory",
+    "capability",
+    "execution",
+    "orchestration",
+    "control"
+  ],
+  "skills": [
+    "harness-first-tool",
+    "harness-ingest",
+    "harness-analysis"
+  ]
+}

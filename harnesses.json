@@ -40,6 +40,28 @@
       ],
       "createdAt": "2026-07-11",
       "status": "active"
+    },
+    {
+      "name": "solo-hackathon",
+      "index": 3,
+      "path": "harness/solo-hackathon",
+      "description": "Harness #3 — generated from HarnessSpec \"solo-hackathon\" (H-4). Assists single-person hackathons.",
+      "capabilities": [
+        "starter",
+        "research"
+      ],
+      "planes": [
+        "provider",
+        "safety",
+        "verification",
+        "memory",
+        "capability",
+        "execution",
+        "orchestration",
+        "control"
+      ],
+      "createdAt": "2026-07-15",
+      "status": "active"
     }
   ]
 }

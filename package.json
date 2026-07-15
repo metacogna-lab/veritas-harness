@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "description": "Veritas meta-harness root — owns the harness registry, the generic operating skills, and the ordered create-harness pipeline. Individual harnesses live under harness/<name>/.",
+  "bin": {
+    "veritas": "./meta/veritas.ts"
+  },
   "scripts": {
+    "veritas": "bun meta/veritas.ts",
     "create-harness": "bun meta/create-harness.ts",
     "list-harnesses": "bun meta/list-harnesses.ts",
     "harness-doctor": "bun meta/doctor.ts",

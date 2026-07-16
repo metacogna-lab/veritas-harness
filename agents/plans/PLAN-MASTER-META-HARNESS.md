@@ -160,5 +160,63 @@ generated harness.
   & `bench.mjs` base-scripts import depth `../../`→`../../../` (broken since `2fcf1f7`). Build now
   exits 0; verify-claims reproduces all 3 claims; bench green. Fixes were defect-restoration on
   frozen artifacts (Approach A); the two domain scripts' permanent home is a capability pack (§5/§7).
-- **Next:** §3 — extract the 3×-forked 8-plane spine into `core/spine/` + drift test (the
-  enforcement mechanism for "harnesses are never edited directly").
+- **2026-07-17 (iter 2) — §3 done for research + example.** TDD: wrote `meta/spine-drift.test.ts`
+  first, confirmed RED (`core/spine` didn't exist), then extracted. Found the true fork was **39
+  files** (27 source + 12 test — one more than plan §9's "41 of 52/11 diverged" estimate; a
+  `control/int-e2e.test.ts` had been added since that audit), verified their dependency closure
+  never reaches domain code before moving. Moved them to `core/spine/{bench,config,control,
+  evidence,llm,mission,orchestration,parse,safety,tools}/`; git detected 38 as renames, preserving
+  blame. Added `@spine/*` path alias (`baseUrl "."`, resolves to `../../core/spine/*`) to both
+  harness `tsconfig.json`s — confirmed Bun honors tsconfig `paths` at runtime, not just for `tsc`.
+  Rewrote 214 import sites (80 research + 134 example) via a scripted codemod (path-resolved, not
+  string-matched, to avoid false positives). `package.json` `test` script now runs
+  `bun test meta core/spine`.
+  Non-mechanical findings the byte-diff alone wouldn't have caught:
+  - `config/index.ts` located its own `default.json`/`local.json` via `dirname(import.meta.url)` —
+    correct when the file lived in the harness, silently wrong once centralized (it would have read
+    `core/spine/config/*.json`, which doesn't exist). Fixed to resolve against `process.cwd()`,
+    matching the convention `base-scripts/doctor.mjs` already uses. Confirmed no other moved file
+    had a similar self-location dependency (`grep -rl "import.meta.url|__dirname|process.cwd()"`
+    across all 39 → only this one).
+  - `safety/human-release.test.ts` was byte-identical between harnesses but imports `../agent/
+    index.ts` (domain, per-harness) — an integration test, not a pure spine test. Left in place per
+    harness (imports rewired to `@spine/*` for the spine parts, `../agent/index.ts` stays local),
+    matching the existing pattern for `agent/*.test.ts` and `mission/experience-store.test.ts`.
+  - `config/index.test.ts` used a `configDirectory()` helper that, after the `process.cwd()` fix,
+    only resolves correctly when run from inside a harness — broke when spine's own test suite runs
+    from the repo root. Gave the test its own fixtures (`core/spine/config/fixtures/`) instead of
+    reading a harness's committed config.
+  - Five `.mjs` scripts (not touched by the `.ts`-only codemod) hardcoded relative imports into the
+    old `src/` locations: `base-scripts/doctor.mjs`, `base-scripts/veritas-config.mjs`, both
+    harnesses' `bench/scope-gate/solver.mjs`, `veritas-example/scripts/{bench,gen-int-smoke,
+    verify-finding}.mjs`. `doctor.mjs`/`veritas-config.mjs` fixed with a local-then-spine fallback
+    (keeps unmigrated harnesses working); the rest repointed directly.
+  - `harness/veritas-example/src/rsi/fixtures/suite.json` names held-in/held-out test files by path
+    for a real `spawnSync("bun", ["test", ...])` in `candidate-runner.ts` (human-gated RSI candidate
+    evaluation, not covered by the `bun test` gate) — updated the now-spine-owned paths.
+  - Both harnesses' `planes.ts` (`invariant #8` self-documentation, asserted by `planes.test.ts`)
+    listed `src/<plane>` module paths for planes now owned by spine — updated to
+    `../../core/spine/<plane>/...`; this is the one genuinely domain-owned file each harness keeps
+    (per §3.5, diverged files stay), just with corrected pointers.
+  - `harness/solo-hackathon` (scaffolded 2026-07-15) and `meta/templates/harness-template/` share a
+    **third, independently-diverged** implementation of these same modules — different Mission
+    (observation-log vs. transcript-seq) and evidence-gate contracts, not a copy. Confirmed via
+    comment-stripped diff (not just prose differences). Migrating them is a real API port, not a
+    mechanical dedup — **explicitly descoped this iteration**, tracked as the open §3.3 follow-up.
+    `spine-drift.test.ts` enforces the dedup only against `MIGRATED_HARNESSES = ["veritas-research",
+    "veritas-example"]`, with `solo-hackathon`/template named and reasoned about in a code comment
+    so the exclusion is visible, not silent.
+  Final gates, all green: root `bun test meta core/spine` 181/181 (incl. drift test); research
+  build clean, 49/49 (was 178 — 129 tests now live once in spine instead of twice), doctor OK;
+  example build clean, 194/194 + 7 pre-existing skips (was 323), doctor OK, `verify-claims`
+  reproduces all 3 claims, `bench` clean, RSI suite 25/25, `gen-int-smoke.mjs` runs cleanly against
+  spine imports (smoke-tested, artifact changes reverted — not an intended content change).
+  Committed on `refactor/spine-extraction`, merged to `main`, pushed.
+- **Open follow-up (not yet started):** §3.3 template + `solo-hackathon` migration to the canonical
+  spine — requires porting their Mission/evidence-gate/tool-registry API to match `core/spine`'s
+  (transcript-seq findings, async `readFileTool`, etc.), not a mechanical import swap. Until this
+  lands, new harnesses created via `create-harness` still get the older, template-lineage
+  implementation, not the deduplicated one.
+- **Next:** §4 (make the template able to generate a real harness — direct dependency of the §3.3
+  follow-up above) or §7 (`base-scripts` script validation, now partially exercised by §3's fixes to
+  `doctor.mjs`/`veritas-config.mjs`) — whichever the next session picks up.

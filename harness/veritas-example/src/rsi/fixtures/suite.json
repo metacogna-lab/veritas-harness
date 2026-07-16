@@ -1,4 +1,4 @@
 {
-  "heldIn": ["src/safety/scope.test.ts"],
-  "heldOut": ["src/agent/index.test.ts", "src/tools/registry.test.ts", "src/evidence/gate.test.ts"]
+  "heldIn": ["../../core/spine/safety/scope.test.ts"],
+  "heldOut": ["src/agent/index.test.ts", "../../core/spine/tools/registry.test.ts", "../../core/spine/evidence/gate.test.ts"]
 }

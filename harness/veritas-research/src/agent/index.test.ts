@@ -3,12 +3,12 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Agent } from "./index.ts";
-import { LLMBackbone } from "../llm/index.ts";
-import type { Transport, TransportResponse } from "../llm/types.ts";
-import type { ProviderConfig } from "../config/index.ts";
-import { starterRegistry } from "../tools/index.ts";
-import { Mission } from "../mission/index.ts";
-import type { MissionScope } from "../safety/scope.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import type { Transport, TransportResponse } from "@spine/llm/types.ts";
+import type { ProviderConfig } from "@spine/config/index.ts";
+import { starterRegistry } from "@spine/tools/index.ts";
+import { Mission } from "@spine/mission/index.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
 
 const anthropicCfg: ProviderConfig = {
   provider: "anthropic",

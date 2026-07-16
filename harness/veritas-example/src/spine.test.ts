@@ -6,12 +6,12 @@ import { test, expect } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readFileTool as readFile } from "./tools/read-file.ts";
-import { ToolRegistry } from "./tools/registry.ts";
-import { Mission } from "./mission/index.ts";
+import { readFileTool as readFile } from "@spine/tools/read-file.ts";
+import { ToolRegistry } from "@spine/tools/registry.ts";
+import { Mission } from "@spine/mission/index.ts";
 import { Agent } from "./agent/index.ts";
 import { ScriptedBackbone } from "./llm/echo.ts";
-import type { CompletionResult } from "./llm/types.ts";
+import type { CompletionResult } from "@spine/llm/types.ts";
 
 const zero = { inputTokens: 0, outputTokens: 0 };
 

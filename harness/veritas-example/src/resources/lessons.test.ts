@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { LessonsStore, lessonFromSnapshot, formatPlanningAdvisory, normalizeLesson, type Lesson } from "./lessons.ts";
-import type { MissionSnapshot } from "../mission/types.ts";
+import type { MissionSnapshot } from "@spine/mission/types.ts";
 
 const snap: MissionSnapshot = {
   id: "m-1",

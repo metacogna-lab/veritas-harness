@@ -16,8 +16,8 @@ import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ControlPlane } from "../src/control/plane.ts";
-import { MissionStore } from "../src/control/store.ts";
-import { LLMBackbone } from "../src/llm/index.ts";
+import { MissionStore } from "../../../core/spine/control/store.ts";
+import { LLMBackbone } from "../../../core/spine/llm/index.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const cfg = { provider: "anthropic", model: "fake", apiKey: "sk-x-000000000000", baseUrl: "http://localhost", maxTokens: 100, temperature: 0 };

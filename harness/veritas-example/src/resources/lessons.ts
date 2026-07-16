@@ -18,7 +18,7 @@
  */
 import { readFileSync, writeFileSync, appendFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import type { MissionSnapshot } from "../mission/types.ts";
+import type { MissionSnapshot } from "@spine/mission/types.ts";
 
 export interface Lesson {
   id: string;

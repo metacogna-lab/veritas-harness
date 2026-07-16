@@ -13,10 +13,10 @@
  */
 import { z } from "zod";
 import { defaultLoadouts } from "./agent/loadouts.ts";
-import { starterRegistry } from "./tools/index.ts";
-import { createSafetyCheck } from "./safety/index.ts";
-import type { MissionScope } from "./safety/scope.ts";
-import type { MissionStore } from "./control/store.ts";
+import { starterRegistry } from "@spine/tools/index.ts";
+import { createSafetyCheck } from "@spine/safety/index.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
+import type { MissionStore } from "@spine/control/store.ts";
 
 const MissionScopeSchema = z.object({
   hosts: z.array(z.string()),

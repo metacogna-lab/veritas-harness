@@ -4,8 +4,8 @@
  * resolved once at job start from config; recorded in the result.
  */
 import { ControlPlane, PlanEvalError } from "../control/plane.ts";
-import type { LLMBackbone } from "../llm/index.ts";
-import type { MissionStore } from "../control/store.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
+import type { MissionStore } from "@spine/control/store.ts";
 import type { EventBus } from "../telemetry/index.ts";
 import { loadResearchPlan } from "../resources/research-plan.ts";
 import type { MissionExecutor, IngestExecutor } from "./types.ts";

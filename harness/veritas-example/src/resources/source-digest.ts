@@ -15,7 +15,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, basename, extname } from "node:path";
 import type { ResearchPlan, PlanSource } from "../ingest/schema.ts";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 

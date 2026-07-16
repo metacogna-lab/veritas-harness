@@ -1,0 +1,9 @@
+{
+  "defaultProvider": "anthropic",
+  "providers": [
+    {
+      "provider": "anthropic",
+      "model": "claude-sonnet-5"
+    }
+  ]
+}

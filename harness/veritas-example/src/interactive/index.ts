@@ -1,7 +1,7 @@
 /**
  * Interactive mode entry — Claude Code–style planning + ingest shell.
  */
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 import { runShell, type ShellDeps } from "./shell.ts";
 
 export type { ShellDeps };

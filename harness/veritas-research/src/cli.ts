@@ -14,10 +14,10 @@
  *
  * For research-plan support (ingest, eval, digest, rsi), use veritas-example.
  */
-import { loadConfig, providerChain } from "./config/index.ts";
-import { LLMBackbone } from "./llm/index.ts";
+import { loadConfig, providerChain } from "@spine/config/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
 import { ControlPlane } from "./control/plane.ts";
-import { MissionStore } from "./control/store.ts";
+import { MissionStore } from "@spine/control/store.ts";
 
 const RUNS_DIR = process.env.VERITAS_RUNS_DIR ?? ".veritas/runs";
 

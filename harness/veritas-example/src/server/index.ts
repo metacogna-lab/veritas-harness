@@ -5,9 +5,9 @@
  * build telemetry (NDJSON + Postgres sink) → serve. Starts the autonomous job runner
  * (Feature 2) unless RUN_WORKER=false. Graceful shutdown drains the pool.
  */
-import { loadConfig, providerChain } from "../config/index.ts";
-import { LLMBackbone } from "../llm/index.ts";
-import { MissionStore } from "../control/store.ts";
+import { loadConfig, providerChain } from "@spine/config/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import { MissionStore } from "@spine/control/store.ts";
 import { telemetryFromEnv } from "../telemetry/index.ts";
 import { getDb, closeDb, isDbConfigured } from "../persistence/db.ts";
 import { runMigrations } from "../persistence/migrate.ts";

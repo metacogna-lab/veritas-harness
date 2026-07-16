@@ -7,7 +7,7 @@ import { join, resolve, extname } from "node:path";
 import { runIngest } from "./ingest.ts";
 import { defaultHarnessRoot } from "./resources-catalog.ts";
 import type { IngestResult } from "./ingest.ts";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 
 export interface DirScanOptions {
   dirPath: string;

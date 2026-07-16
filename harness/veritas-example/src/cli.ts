@@ -20,10 +20,10 @@
  * print sinks / LLM factory / store dir — so it is unit-testable without a network,
  * an API key, or process.exit. The module entry only wires real deps + exit codes.
  */
-import { loadConfig, providerChain } from "./config/index.ts";
-import { LLMBackbone } from "./llm/index.ts";
+import { loadConfig, providerChain } from "@spine/config/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
 import { ControlPlane, PlanEvalError, type StartInput } from "./control/plane.ts";
-import { MissionStore } from "./control/store.ts";
+import { MissionStore } from "@spine/control/store.ts";
 import { defaultLoadouts } from "./agent/loadouts.ts";
 import { loadResearchPlan } from "./resources/research-plan.ts";
 import { runIngest } from "./ingest/ingest.ts";

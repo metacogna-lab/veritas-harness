@@ -4,7 +4,7 @@
  * entry repeats once the script is exhausted. This is what lets a freshly
  * scaffolded harness pass `bun test` before any real provider key is configured.
  */
-import type { ILLMBackbone, CompletionRequest, CompletionResult } from "./types.ts";
+import type { ILLMBackbone, CompletionRequest, CompletionResult } from "@spine/llm/types.ts";
 
 export class ScriptedBackbone implements ILLMBackbone {
   private index = 0;

@@ -11,8 +11,8 @@
  */
 import { parseArgs } from "node:util";
 import { unlinkSync, existsSync } from "node:fs";
-import { loadConfig, providerChain } from "../config/index.ts";
-import { LLMBackbone } from "../llm/index.ts";
+import { loadConfig, providerChain } from "@spine/config/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
 import { runIngest } from "./ingest.ts";
 import { dirIngest } from "./dir-scanner.ts";
 import { interviewIngest } from "./interview.ts";

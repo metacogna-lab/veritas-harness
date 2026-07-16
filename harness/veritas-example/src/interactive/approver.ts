@@ -1,7 +1,7 @@
 /**
  * Stdin approver for interactive /start — asks y/n for gated tools.
  */
-import type { Approver, ApprovalRequest } from "../safety/approval.ts";
+import type { Approver, ApprovalRequest } from "@spine/safety/approval.ts";
 
 export type AskFn = (question: string) => Promise<string>;
 

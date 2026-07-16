@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 import type { ParsedIntent } from "./parse-intent.ts";
 import { catalogSummary, type ResourcesCatalog } from "./resources-catalog.ts";
 import { INGEST_VERSION } from "./schema.ts";

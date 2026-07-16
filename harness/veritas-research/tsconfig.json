@@ -13,6 +13,9 @@
     "verbatimModuleSyntax": true,
     "noEmit": true,
 
+    "baseUrl": ".",
+    "paths": { "@spine/*": ["../../core/spine/*"] },
+
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,

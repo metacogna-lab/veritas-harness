@@ -16,9 +16,9 @@
  * a network model.
  */
 import { readFileSync } from "node:fs";
-import { refuteFinding } from "../src/evidence/refuter.ts";
-import { LLMBackbone } from "../src/llm/index.ts";
-import { loadConfig, providerChain } from "../src/config/index.ts";
+import { refuteFinding } from "../../../core/spine/evidence/refuter.ts";
+import { LLMBackbone } from "../../../core/spine/llm/index.ts";
+import { loadConfig, providerChain } from "../../../core/spine/config/index.ts";
 
 const args = process.argv.slice(2);
 const fixture = args.includes("--fixture");

@@ -13,7 +13,7 @@ import { createLlmProposer } from "./llm-proposer.ts";
 import { createCandidateRunTests } from "./candidate-runner.ts";
 import { writeLoadoutCandidateArtifacts } from "./candidate-artifacts.ts";
 import { LessonsStore } from "../resources/lessons.ts";
-import type { ILLMBackbone } from "../llm/types.ts";
+import type { ILLMBackbone } from "@spine/llm/types.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(HERE, "fixtures");

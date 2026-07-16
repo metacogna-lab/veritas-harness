@@ -3,7 +3,7 @@
  */
 import { readFileSync } from "node:fs";
 import { researchPlanSchema, type ResearchPlan } from "../ingest/schema.ts";
-import type { MissionScope } from "../safety/scope.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
 export type { ResearchPlan };
 
 export interface PlanStartMapping {

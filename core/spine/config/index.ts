@@ -1,13 +1,17 @@
 /**
  * Typed configuration + provider/key resolution.
  *
- * Config files live in this directory (`default.json` committed, `local.json`
- * optional and gitignored). Keys resolve from environment variables; every
- * value that leaves this module toward a log passes through `redact()`.
+ * Config files live in the *calling harness's* `src/config/` (`default.json`
+ * committed, `local.json` optional and gitignored) — this module is a shared
+ * core/spine module, not itself a harness, so it resolves against
+ * `process.cwd()` rather than its own directory. Every harness script runs
+ * with cwd = the harness package root (`bun run <script>` from that
+ * directory), which is what makes this resolution correct. Keys resolve from
+ * environment variables; every value that leaves this module toward a log
+ * passes through `redact()`.
  */
 import { readFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { redact } from "./redact.ts";
 import { getProviderDef, isProviderId, normalizeProvider } from "./providers.ts";
 import type { HarnessConfig, Provider, ProviderConfig, RawConfigFile } from "./types.ts";
@@ -23,7 +27,7 @@ export {
 } from "./providers.ts";
 export type { ProviderDefinition, ProviderKind } from "./providers.ts";
 
-const CONFIG_DIR = dirname(fileURLToPath(import.meta.url));
+const CONFIG_DIR = join(process.cwd(), "src", "config");
 const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_TEMPERATURE = 0.2;
 

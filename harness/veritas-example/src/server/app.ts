@@ -10,7 +10,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { ControlPlane, PlanEvalError } from "../control/plane.ts";
-import { redact } from "../config/index.ts";
+import { redact } from "@spine/config/index.ts";
 import { runIngest } from "../ingest/ingest.ts";
 import { buildSyntheticBrief } from "../ingest/brief.ts";
 import { evalPlanWithConfig } from "../resources/plan-eval.ts";

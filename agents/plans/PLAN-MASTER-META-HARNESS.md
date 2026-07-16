@@ -146,3 +146,19 @@ validation → 7. §5 backfill example → regen parity → 8. §6 root↔harnes
 trunk disambiguation; §2 gate baseline; §3.4 drift test as the *enforcement* of the no-direct-edit
 rule; §5.3 regeneration-parity diff; §6.3 meta-import lint; §8.4 safety-invariant re-proof in the
 generated harness.
+
+---
+
+## Progress log
+
+- **2026-07-17 (iter 1)** — §0 decided A + trunk=`main`. §1 branch/worktree reconciled (feature
+  branches merged+deleted; only primary worktree; no dangling). §2 gate baseline established:
+  meta 50✓, veritas-research 178✓ + doctor OK, veritas-example 323✓/7skip. **§7 found 3 real
+  baseline defects (repo gates were red on `main`)** and fixed them (branch
+  `fix/baseline-gates-green`, merged to `main` @ `47adfe8`): (1) `modal-provider.ts` literal
+  `import("modal")` → tsc TS2307 build break, indirected the specifier; (2)+(3) `verify-claims.mjs`
+  & `bench.mjs` base-scripts import depth `../../`→`../../../` (broken since `2fcf1f7`). Build now
+  exits 0; verify-claims reproduces all 3 claims; bench green. Fixes were defect-restoration on
+  frozen artifacts (Approach A); the two domain scripts' permanent home is a capability pack (§5/§7).
+- **Next:** §3 — extract the 3×-forked 8-plane spine into `core/spine/` + drift test (the
+  enforcement mechanism for "harnesses are never edited directly").

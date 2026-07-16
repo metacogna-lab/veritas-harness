@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, rmSync, readFileSync, existsSync, writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 import type { ResearchPlan } from "../ingest/schema.ts";
 import { evalPlanWithConfig } from "../resources/plan-eval.ts";
 import { missionOutputPath } from "../ingest/ingest.ts";

@@ -8,7 +8,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { run } from "./cli.ts";
-import type { LLMBackbone } from "./llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 
 /** Run the CLI with captured output and an inert LLM (status/report never call it). */
 async function runCli(argv: string[]): Promise<{ code: number; out: string[]; err: string[] }> {

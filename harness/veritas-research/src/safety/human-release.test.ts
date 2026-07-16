@@ -5,14 +5,14 @@ import {
   HumanReleaseSession,
   type HumanReleasePolicy,
   type TerminalAction,
-} from "./human-release.ts";
-import { createSafetyCheck } from "./index.ts";
-import { ToolRegistry } from "../tools/registry.ts";
+} from "@spine/safety/human-release.ts";
+import { createSafetyCheck } from "@spine/safety/index.ts";
+import { ToolRegistry } from "@spine/tools/registry.ts";
 import { Agent } from "../agent/index.ts";
-import { Mission } from "../mission/index.ts";
-import { LLMBackbone } from "../llm/index.ts";
-import type { Transport, TransportResponse } from "../llm/types.ts";
-import type { ProviderConfig } from "../config/index.ts";
+import { Mission } from "@spine/mission/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import type { Transport, TransportResponse } from "@spine/llm/types.ts";
+import type { ProviderConfig } from "@spine/config/index.ts";
 
 const action = (overrides: Partial<TerminalAction> = {}): TerminalAction => ({
   toolName: "publish_report",

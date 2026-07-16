@@ -3,9 +3,9 @@
  * unit-testable via app.request(...) with a scripted LLM, an in-memory store, and no
  * database — while production wires the real ControlPlane, config, and Postgres.
  */
-import type { LLMBackbone } from "../llm/index.ts";
-import type { MissionStore } from "../control/store.ts";
-import type { HarnessConfig } from "../config/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
+import type { MissionStore } from "@spine/control/store.ts";
+import type { HarnessConfig } from "@spine/config/index.ts";
 import type { EventBus } from "../telemetry/index.ts";
 import type { Db } from "../persistence/db.ts";
 import type { JobQueue } from "../jobs/queue.ts";

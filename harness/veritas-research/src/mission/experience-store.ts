@@ -16,7 +16,7 @@
  */
 import { mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import type { MissionSnapshot, TranscriptEntry, Finding } from "./types.ts";
+import type { MissionSnapshot, TranscriptEntry, Finding } from "@spine/mission/types.ts";
 
 // ── public types ──────────────────────────────────────────────────────────────
 

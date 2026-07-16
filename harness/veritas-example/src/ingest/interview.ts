@@ -8,7 +8,7 @@ import { existsSync } from "node:fs";
 import { runIngest } from "./ingest.ts";
 import { dirIngest } from "./dir-scanner.ts";
 import type { IngestResult } from "./ingest.ts";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 
 export interface InterviewOptions {
   prefill?: {

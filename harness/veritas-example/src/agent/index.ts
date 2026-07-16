@@ -15,11 +15,11 @@
  *     changing this loop (invariant #8: compose, don't fork).
  */
 import { EventEmitter } from "eventemitter3";
-import type { LLMBackbone } from "../llm/index.ts";
-import type { ILLMBackbone, CompletionRequest, Message } from "../llm/types.ts";
-import type { ToolRegistry, SafetyCheck } from "../tools/registry.ts";
-import type { Mission } from "../mission/index.ts";
-import { checkScope } from "../safety/scope.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
+import type { ILLMBackbone, CompletionRequest, Message } from "@spine/llm/types.ts";
+import type { ToolRegistry, SafetyCheck } from "@spine/tools/registry.ts";
+import type { Mission } from "@spine/mission/index.ts";
+import { checkScope } from "@spine/safety/scope.ts";
 import type { Specialist } from "./specialists.ts";
 
 export * from "./specialists.ts";

@@ -12,7 +12,7 @@ import { listExperienceMissions } from "../mission/experience-store.ts";
 import { buildProposalContext, proposeEdit, type Proposer } from "./proposal.ts";
 import { validateProposal, type RunTests } from "./validation.ts";
 import { applyProposal, type ApplyOutcome } from "./apply.ts";
-import type { HumanReleasePolicy, HumanReleaseSession } from "../safety/human-release.ts";
+import type { HumanReleasePolicy, HumanReleaseSession } from "@spine/safety/human-release.ts";
 import type { LessonsStore } from "../resources/lessons.ts";
 import { formatPlanningAdvisory } from "../resources/lessons.ts";
 

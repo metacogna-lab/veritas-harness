@@ -4,9 +4,9 @@
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadConfig, providerChain } from "../config/index.ts";
-import { LLMBackbone } from "../llm/index.ts";
-import type { LLMBackboneOptions } from "../llm/index.ts";
+import { loadConfig, providerChain } from "@spine/config/index.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import type { LLMBackboneOptions } from "@spine/llm/index.ts";
 import { parseIntentFile } from "./parse-intent.ts";
 import { buildResourcesCatalog, defaultHarnessRoot } from "./resources-catalog.ts";
 import { fitIntent } from "./fit-intent.ts";

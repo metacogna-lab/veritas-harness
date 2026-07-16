@@ -11,7 +11,7 @@
  * The agent loop, gates, ledger, refuter, and control plane are all reused
  * unchanged. Only the three things in `Loadout` vary per domain.
  */
-import type { MissionScope } from "../safety/scope.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
 
 export interface Specialist {
   role: string;

@@ -7,12 +7,15 @@ import {
   providerChain,
   isProvider,
   redactedConfig,
-  configDirectory,
   normalizeProvider,
 } from "./index.ts";
 
-const FIXTURE_DEFAULT = join(configDirectory(), "default.json");
-const FIXTURE_LOCAL_EXAMPLE = join(configDirectory(), "local.example.json");
+// Spine's own fixtures — decoupled from any single harness's committed
+// src/config/*.json (configDirectory() resolves against process.cwd(), which
+// is only correct when running inside a harness, not when testing the spine
+// module directly from the repo root).
+const FIXTURE_DEFAULT = join(import.meta.dir, "fixtures", "default.json");
+const FIXTURE_LOCAL_EXAMPLE = join(import.meta.dir, "fixtures", "local.example.json");
 
 describe("redact", () => {
   test("masks secret-named keys", () => {

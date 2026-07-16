@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 import type { ResearchPlan } from "../ingest/schema.ts";
 import { runShell } from "./shell.ts";
 import { run } from "../cli.ts";

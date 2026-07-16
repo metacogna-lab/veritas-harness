@@ -2,8 +2,8 @@
  * LLM-backed RSI proposer — injects ILLMBackbone; still dry-run / human-release
  * gated. Never applies edits to disk (invariant #5).
  */
-import { parseLastObject } from "../parse/json.ts";
-import type { ILLMBackbone } from "../llm/types.ts";
+import { parseLastObject } from "@spine/parse/json.ts";
+import type { ILLMBackbone } from "@spine/llm/types.ts";
 import type { HarnessEditProposal, ProposalContext } from "./types.ts";
 import type { Proposer } from "./proposal.ts";
 

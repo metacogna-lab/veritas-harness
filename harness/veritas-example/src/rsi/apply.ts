@@ -8,8 +8,8 @@
  * application is a human step performed outside this module. An ineligible proposal
  * is never even offered for release.
  */
-import { requireHumanRelease, type HumanReleasePolicy, HumanReleaseSession } from "../safety/human-release.ts";
-import type { ScopeDecision } from "../safety/scope.ts";
+import { requireHumanRelease, type HumanReleasePolicy, HumanReleaseSession } from "@spine/safety/human-release.ts";
+import type { ScopeDecision } from "@spine/safety/scope.ts";
 import type { HarnessEditProposal, ValidationResult, FailurePattern, HumanReviewPacket, CandidateEvalResult } from "./types.ts";
 
 export interface ApplyOutcome {

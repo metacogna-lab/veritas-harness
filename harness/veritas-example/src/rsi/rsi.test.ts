@@ -5,12 +5,12 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { mineWeaknesses, signatureOf, gatherFailuresFromStore, writeFailureClusters } from "./weakness-mining.ts";
 import { writeExperienceEntry, type HarnessConfigSnapshot } from "../mission/experience-store.ts";
-import type { MissionSnapshot } from "../mission/types.ts";
+import type { MissionSnapshot } from "@spine/mission/types.ts";
 import { buildProposalContext, assertHonestContext, isProposalBounded, proposeEdit, type Proposer } from "./proposal.ts";
 import { decideValidation, validateProposal } from "./validation.ts";
 import { applyProposal } from "./apply.ts";
 import { runRsi, summarizeRun } from "./run.ts";
-import { HumanReleaseSession } from "../safety/human-release.ts";
+import { HumanReleaseSession } from "@spine/safety/human-release.ts";
 import type { FailureObservation, EditableSurface, HarnessEditProposal, RegressionSuite } from "./types.ts";
 
 const failures = JSON.parse(

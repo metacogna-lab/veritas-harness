@@ -6,14 +6,19 @@
  *   bun run veritas-config
  */
 import { createInterface } from "node:readline/promises";
-import { writeFileSync } from "node:fs";
+import { writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
 const CONFIG_DIR = join(root, "src/config");
 const OUTPUT = join(CONFIG_DIR, "local.json");
 
-const { listProviders, getProviderDef } = await import(join(root, "src/config/providers.ts"));
+// Migrated harnesses no longer carry their own src/config/providers.ts (it
+// lives in core/spine/, imported via @spine/*); fall back to the spine copy.
+const localProvidersPath = join(root, "src/config/providers.ts");
+const spineProvidersPath = join(root, "../../core/spine/config/providers.ts");
+const providersPath = existsSync(localProvidersPath) ? localProvidersPath : spineProvidersPath;
+const { listProviders, getProviderDef } = await import(providersPath);
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 

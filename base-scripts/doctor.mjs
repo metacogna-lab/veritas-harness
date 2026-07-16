@@ -28,7 +28,13 @@ if (nodeMajor >= 18) ok("Node version", `v${process.versions.node}`);
 else fail("Node version", `v${process.versions.node} (need >= 18)`);
 
 // ── Config checks (dynamic import, harness-specific) ───────────────────────
-const configPath = join(root, "src/config/index.ts");
+// Migrated harnesses import config from the canonical core/spine/ package
+// (via the @spine/* alias in their own src/); doctor.mjs runs standalone, so
+// it resolves the same file directly. Unmigrated harnesses (still carrying
+// their own local src/config/index.ts) fall back to that copy.
+const localConfigPath = join(root, "src/config/index.ts");
+const spineConfigPath = join(root, "../../core/spine/config/index.ts");
+const configPath = existsSync(localConfigPath) ? localConfigPath : spineConfigPath;
 if (existsSync(configPath)) {
   try {
     const { loadConfig, redactedConfig, configDirectory, getProviderDef } =

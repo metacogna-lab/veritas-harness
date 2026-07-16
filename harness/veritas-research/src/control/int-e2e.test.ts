@@ -10,12 +10,12 @@ import { mkdtemp, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ControlPlane } from "./plane.ts";
-import { MissionStore } from "./store.ts";
-import { LLMBackbone } from "../llm/index.ts";
+import { MissionStore } from "@spine/control/store.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
 import { LoadoutRegistry } from "../agent/specialists.ts";
 import type { Loadout } from "../agent/specialists.ts";
-import type { Transport, TransportResponse } from "../llm/types.ts";
-import type { ProviderConfig } from "../config/index.ts";
+import type { Transport, TransportResponse } from "@spine/llm/types.ts";
+import type { ProviderConfig } from "@spine/config/index.ts";
 
 const auditLoadout: Loadout = {
   name: "codebase-audit",

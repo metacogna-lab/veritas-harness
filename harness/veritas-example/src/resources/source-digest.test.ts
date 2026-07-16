@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync, rmSync, existsSync, readFileSync } from "node
 import { join } from "node:path";
 import { digestSources } from "./source-digest.ts";
 import type { ResearchPlan } from "../ingest/schema.ts";
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 
 // ── fixtures ─────────────────────────────────────────────────────────────────
 

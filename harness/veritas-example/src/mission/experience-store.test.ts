@@ -10,7 +10,7 @@ import {
   type HarnessConfigSnapshot,
   type BenchmarkScores,
 } from "./experience-store.ts";
-import type { MissionSnapshot } from "./types.ts";
+import type { MissionSnapshot } from "@spine/mission/types.ts";
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 

@@ -5,8 +5,8 @@ import { tmpdir } from "node:os";
 import { McpHarnessServer } from "./mcp-server.ts";
 import { LoadoutRegistry } from "./agent/specialists.ts";
 import type { Loadout } from "./agent/specialists.ts";
-import { MissionStore } from "./control/store.ts";
-import { Mission } from "./mission/index.ts";
+import { MissionStore } from "@spine/control/store.ts";
+import { Mission } from "@spine/mission/index.ts";
 
 describe("McpHarnessServer — no safety bypass via MCP", () => {
   test("execute_scoped_tool denies off-scope read_file (same as direct call)", async () => {

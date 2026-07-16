@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Veritas meta-harness root — owns the harness registry, the generic operating skills, and the ordered create-harness pipeline. Individual harnesses live under harness/<name>/.",
+  "description": "Veritas meta-harness root — owns the harness registry, the generic operating skills, the ordered create-harness pipeline, and the canonical 8-plane spine (core/spine/). Individual harnesses live under harness/<name>/ and import the spine via the @spine/* path alias; they never re-embed it.",
   "bin": {
     "veritas": "./meta/veritas.ts"
   },
@@ -12,7 +12,7 @@
     "create-harness": "bun meta/create-harness.ts",
     "list-harnesses": "bun meta/list-harnesses.ts",
     "harness-doctor": "bun meta/doctor.ts",
-    "test": "bun test meta"
+    "test": "bun test meta core/spine"
   },
   "dependencies": {
     "zod": "^4.4.3"

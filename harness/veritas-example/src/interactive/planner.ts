@@ -2,7 +2,7 @@
  * Multi-turn research planner — drafts/refines a ResearchPlan via LLM + Zod.
  * Does not write to disk; /write owns persistence after dogma gate.
  */
-import type { LLMBackbone } from "../llm/index.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
 import type { ResearchPlan } from "../ingest/schema.ts";
 import { INGEST_VERSION } from "../ingest/schema.ts";
 import { validateResearchPlan, formatValidationErrors } from "../ingest/validate.ts";

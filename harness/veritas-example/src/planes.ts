@@ -17,23 +17,28 @@ export interface PlaneSpec {
 export const PLANES = {
   provider: {
     role: "Single complete() interface; provider+local fallback chain, token accounting, text-mode tool shim.",
-    modules: ["src/llm/index.ts", "src/llm/types.ts"],
+    modules: ["../../core/spine/llm/index.ts", "../../core/spine/llm/types.ts"],
   },
   safety: {
     role: "Pure, I/O-free gates: scope containment, risk-tier approval, human-release. Deny by default.",
-    modules: ["src/safety/scope.ts", "src/safety/approval.ts", "src/safety/human-release.ts", "src/safety/index.ts"],
+    modules: [
+      "../../core/spine/safety/scope.ts",
+      "../../core/spine/safety/approval.ts",
+      "../../core/spine/safety/human-release.ts",
+      "../../core/spine/safety/index.ts",
+    ],
   },
   verification: {
     role: "Evidence gate (provenance before claim) + adversarial refuter (refute before confirm).",
-    modules: ["src/evidence/gate.ts", "src/evidence/refuter.ts"],
+    modules: ["../../core/spine/evidence/gate.ts", "../../core/spine/evidence/refuter.ts"],
   },
   memory: {
     role: "Durable append-only ledger (Mission) + ephemeral windowed context (rolling summary/scratchpad).",
-    modules: ["src/mission/index.ts", "src/memory/context-window.ts"],
+    modules: ["../../core/spine/mission/index.ts", "src/memory/context-window.ts"],
   },
   capability: {
     role: "Typed tool registry: schema-validated at the boundary, strict risk tiers.",
-    modules: ["src/tools/registry.ts"],
+    modules: ["../../core/spine/tools/registry.ts"],
   },
   execution: {
     role: "The ReAct loop; hard step/token ceilings; every tool call routes through the safety gate.",
@@ -41,7 +46,7 @@ export const PLANES = {
   },
   orchestration: {
     role: "Honest decomposition into worker sub-tasks; round-based synthesis. Never hides task shape.",
-    modules: ["src/orchestration/orchestrator.ts"],
+    modules: ["../../core/spine/orchestration/orchestrator.ts"],
   },
   control: {
     role: "Mission lifecycle, NL intake, cost aggregation, reporting.",

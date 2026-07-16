@@ -9,24 +9,24 @@
  * The LLM is injected so this is testable without network. The CLI (`cli.ts`)
  * is a thin argv wrapper that builds a real LLM from config and calls this.
  */
-import type { LLMBackbone } from "../llm/index.ts";
-import { Mission } from "../mission/index.ts";
-import type { MissionSnapshot, MissionStatus } from "../mission/types.ts";
+import type { LLMBackbone } from "@spine/llm/index.ts";
+import { Mission } from "@spine/mission/index.ts";
+import type { MissionSnapshot, MissionStatus } from "@spine/mission/types.ts";
 import { Agent, type AgentResult } from "../agent/index.ts";
 import { LoadoutRegistry, type Loadout } from "../agent/specialists.ts";
 import { defaultLoadouts } from "../agent/loadouts.ts";
-import { starterRegistry, type ToolRegistry } from "../tools/index.ts";
-import { makeRecordFindingTool } from "../tools/record-finding.ts";
-import { evidenceGate } from "../evidence/gate.ts";
-import { promoteFinding } from "../evidence/refuter.ts";
-import { createSafetyCheck, type ApprovalPolicy } from "../safety/index.ts";
-import { MissionStore } from "./store.ts";
+import { starterRegistry, type ToolRegistry } from "@spine/tools/index.ts";
+import { makeRecordFindingTool } from "@spine/tools/record-finding.ts";
+import { evidenceGate } from "@spine/evidence/gate.ts";
+import { promoteFinding } from "@spine/evidence/refuter.ts";
+import { createSafetyCheck, type ApprovalPolicy } from "@spine/safety/index.ts";
+import { MissionStore } from "@spine/control/store.ts";
 import type { ResearchPlan } from "../resources/research-plan.ts";
 import { planToStartOptions } from "../resources/research-plan.ts";
 import { evalPlanWithConfig, renderEvalReport } from "../resources/plan-eval.ts";
 import { digestSources } from "../resources/source-digest.ts";
 import { writeExperienceEntry, type HarnessConfigSnapshot } from "../mission/experience-store.ts";
-import type { MissionScope } from "../safety/scope.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
 import type { EventBus } from "../telemetry/index.ts";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

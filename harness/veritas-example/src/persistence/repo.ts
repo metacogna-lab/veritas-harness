@@ -8,9 +8,9 @@
 import { eq } from "drizzle-orm";
 import type { Db } from "./db.ts";
 import { events, missions, logs } from "./schema.ts";
-import { redact } from "../config/redact.ts";
+import { redact } from "@spine/config/redact.ts";
 import { EVENT_LEVEL, type HarnessEvent } from "../telemetry/types.ts";
-import type { MissionSnapshot } from "../mission/types.ts";
+import type { MissionSnapshot } from "@spine/mission/types.ts";
 
 /** Insert one telemetry event (payload redacted). Returns nothing; callers stay fire-and-forget. */
 export async function insertEvent(db: Db, sessionId: string, e: HarnessEvent): Promise<void> {

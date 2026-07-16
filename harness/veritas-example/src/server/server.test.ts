@@ -11,10 +11,10 @@ import { join } from "node:path";
 import { createApp } from "./app.ts";
 import { streamMissionEvents } from "./sse.ts";
 import { EventBus } from "../telemetry/index.ts";
-import { MissionStore } from "../control/store.ts";
-import { LLMBackbone } from "../llm/index.ts";
-import type { ProviderConfig, HarnessConfig } from "../config/index.ts";
-import type { TransportResponse } from "../llm/types.ts";
+import { MissionStore } from "@spine/control/store.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import type { ProviderConfig, HarnessConfig } from "@spine/config/index.ts";
+import type { TransportResponse } from "@spine/llm/types.ts";
 import type { ServerDeps } from "./deps.ts";
 
 const cfg: ProviderConfig = {

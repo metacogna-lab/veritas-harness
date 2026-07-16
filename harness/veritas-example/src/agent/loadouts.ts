@@ -3,7 +3,7 @@
  * on the SAME loop/gates/ledger and differ only in tools, prompts, and target
  * adapter. Registering a third domain requires no change to any core module.
  */
-import type { MissionScope } from "../safety/scope.ts";
+import type { MissionScope } from "@spine/safety/scope.ts";
 import type { Loadout, TargetAdapter } from "./specialists.ts";
 import { LoadoutRegistry } from "./specialists.ts";
 

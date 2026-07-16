@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { LLMBackbone } from "../llm/index.ts";
-import type { ProviderConfig } from "../config/index.ts";
-import type { TransportResponse } from "../llm/types.ts";
+import { LLMBackbone } from "@spine/llm/index.ts";
+import type { ProviderConfig } from "@spine/config/index.ts";
+import type { TransportResponse } from "@spine/llm/types.ts";
 import { parseIntentFile } from "./parse-intent.ts";
 import { buildResourcesCatalog } from "./resources-catalog.ts";
 import { fitIntent } from "./fit-intent.ts";

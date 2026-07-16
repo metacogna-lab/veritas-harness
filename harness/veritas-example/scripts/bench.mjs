@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, readdirSync, existsSync, statSync } from "
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { passAtOne, wilson95, round } from "../../../base-scripts/lib/stats.mjs";
-import { antiFittingGuard } from "../src/bench/guard.ts";
+import { antiFittingGuard } from "../../../core/spine/bench/guard.ts";
 
 // ── candidate decision logic ──────────────────────────────────────────────────
 

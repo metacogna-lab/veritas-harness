@@ -28,8 +28,10 @@ export class ModalProvider implements SandboxProvider {
       throw new Error("modal provider: MODAL_TOKEN_ID/MODAL_TOKEN_SECRET not set");
     }
     // Soft dependency — Modal SDK may not be installed until Loop M ships `bun add modal`.
+    // Indirect the specifier so tsc treats this as a dynamic import (no static resolution → no TS2307).
+    const modalSpecifier = "modal";
     try {
-      await import("modal");
+      await import(modalSpecifier);
     } catch {
       throw new Error("modal provider: package `modal` not installed — run `bun add modal`");
     }

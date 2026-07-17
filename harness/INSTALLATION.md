@@ -196,8 +196,9 @@ bun run harness-doctor
 ```
 
 `--from-spec` consumes a `HarnessSpec` JSON (H-4; see `meta/harness-spec.ts` and
-`agents/specs/`). Domain harnesses can derive a spec from an ingested plan via
-`harness/veritas-example/src/ingest/to-harness-spec.ts` — they do not run the scaffold themselves.
+`agents/specs/`). A domain plan is derived into a spec via `researchPlanToHarnessSpec`
+in `meta/harness-spec.ts` (structural input; meta never imports the domain schema) —
+harnesses do not run the scaffold themselves.
 
 The pipeline progresses in order: validate → scaffold the 8-plane template →
 install capability-pack skills into `harness/<name>/skills/` → write `harness.json`

@@ -3,7 +3,7 @@
 Exploratory **spawned** research-domain harness — loadouts, ingest, RSI, bench, and
 skills. Prefer this package for running missions. **Harness creation** lives only at
 the repo root (`bun run create-harness` / `meta/`); derive a seed spec from a plan via
-`src/ingest/to-harness-spec.ts`, then pass it with `--from-spec`.
+`researchPlanToHarnessSpec` in `meta/harness-spec.ts`, then pass it with `--from-spec`.
 
 A Veritas harness — a typed agent loop with safety gates, an evidence ledger, and
 a control-plane CLI. Scaffolded from the meta-harness template; extend it by

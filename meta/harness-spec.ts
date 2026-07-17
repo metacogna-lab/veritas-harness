@@ -79,6 +79,40 @@ export function deriveHarnessSpec(intent: IngestedIntent): HarnessSpec {
 }
 
 /**
+ * Structural subset of a domain research plan that meta needs to derive a spec.
+ * Declared here (not imported from a harness) so meta stays free of the domain
+ * mission schema — any plan carrying these fields is structurally assignable. This
+ * is the intent→spec bridge, consolidated at the meta root (the owner of generation).
+ */
+export interface HarnessPlanInput {
+  metadata: { slug: string };
+  loadout: string;
+  specialists: readonly { role: string; focus: string }[];
+  scope: { hosts: readonly string[]; paths: readonly string[] };
+}
+
+/** Lift a research plan into the structural intent (domain-schema-free, meta-owned). */
+export function planToIngestedIntent(plan: HarnessPlanInput, capabilities?: string[]): IngestedIntent {
+  return {
+    slug: plan.metadata.slug,
+    loadout: plan.loadout,
+    specialists: plan.specialists.map((s) => ({ role: s.role, focus: s.focus })),
+    scope: { hosts: [...plan.scope.hosts], paths: [...plan.scope.paths] },
+    capabilities: capabilities ?? ["research"],
+  };
+}
+
+/**
+ * Derive a HarnessSpec from a domain research plan (delegates to deriveHarnessSpec;
+ * no scaffold here). Creation stays in `create-harness --from-spec`; this only
+ * produces the JSON contract. Moved from harness/veritas-example/src/ingest so that
+ * all generation-involved code lives at the meta root.
+ */
+export function researchPlanToHarnessSpec(plan: HarnessPlanInput, capabilities?: string[]): HarnessSpec {
+  return deriveHarnessSpec(planToIngestedIntent(plan, capabilities));
+}
+
+/**
  * Render a `src/agent/loadouts.ts` source module from a spec (pure + deterministic).
  * This is what the scaffold's spec-driven variant writes; kept pure so it is unit-
  * testable without touching the filesystem.

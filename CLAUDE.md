@@ -188,7 +188,9 @@ harness/<name>/       one independent harness package per project (see below)
 New harnesses are created **only** through `bun run create-harness <name>` — the ordered
 pipeline that scaffolds `harness/<name>/`, installs capability-pack skills, writes its
 `harness.json`, and registers it (invariant #4). Harness-*specific* skills live inside the
-harness; generic skills live at the meta root (invariant #3).
+harness; generic skills live at the meta root (invariant #3). **`harness/CLAUDE.md` states the
+corollary explicitly: once created, a harness is executed and read, never hand-edited — read it
+before touching anything under `harness/<name>/`.**
 
 ### Per-harness layout
 

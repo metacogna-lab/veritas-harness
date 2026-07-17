@@ -217,6 +217,47 @@ generated harness.
   (transcript-seq findings, async `readFileTool`, etc.), not a mechanical import swap. Until this
   lands, new harnesses created via `create-harness` still get the older, template-lineage
   implementation, not the deduplicated one.
-- **Next:** §4 (make the template able to generate a real harness — direct dependency of the §3.3
-  follow-up above) or §7 (`base-scripts` script validation, now partially exercised by §3's fixes to
-  `doctor.mjs`/`veritas-config.mjs`) — whichever the next session picks up.
+- **2026-07-17 (iter 3) — §7 + §8.1/8.2 done; `/simplify` applied to iter 2's commit.**
+  §7: ran `doctor.mjs`/`veritas-config.mjs` against all three registered harnesses (including
+  unmigrated `solo-hackathon`, to prove the local-then-spine fallback works both directions).
+  `base-scripts/lib/stats.mjs` had zero dedicated test coverage — added `stats.test.mjs`, wired
+  `base-scripts` into the root `bun test` script.
+  §8.1/8.2: ran `create-harness` end-to-end (`agents/evals/created-harness-executes.md`) — build/
+  test/doctor/CLI green, invariants #1 (scope) and #3 (provenance) proven via the template's own
+  `spine.test.ts`. **Concrete gap found:** the template's `cli.ts` implements only a `planes` verb —
+  no mission-execution verb exists, so "the harness executes for its goal" is provable today only
+  via the committed unit test, not the actual CLI surface. Rolled into the §3.3/§4 follow-up.
+  `/simplify` (4 parallel agents: reuse, simplification, efficiency, altitude) on iter 2's commit —
+  3 of 4 independently converged on the same finding. Applied: extracted the `doctor.mjs`/
+  `veritas-config.mjs` duplicated local-then-spine fallback to `base-scripts/lib/resolve-spine.mjs`;
+  hoisted `spine-drift.test.ts`'s redundant double `walkFiles()` call; deduped the `@spine/*`
+  tsconfig alias (was hand-copied into both harness `tsconfig.json`s) into root
+  `tsconfig.spine-paths.json`, extended by both — verified Bun resolves paths through an `extends`
+  chain before applying. **One fix applied then reverted:** the altitude agent's strongest finding
+  (`config/index.ts` silently returns `{}` when `CONFIG_DIR` doesn't exist, should fail loud) broke
+  `solo-hackathon`'s `doctor` on the first regression sweep — that harness legitimately has no
+  `src/config/` at all (its template lineage never shipped the config plane; it uses
+  `ScriptedBackbone` instead of `loadConfig()`), so "missing CONFIG_DIR" isn't always a wrong-cwd
+  bug. Reverted, full sweep re-run to confirm. Also found `solo-hackathon`'s `tsc` build is broken
+  (readonly/mutable array mismatch in `src/agent/loadouts.ts`) — confirmed present on the original
+  `73f543e` baseline via `git stash` + checkout, unrelated to any of this session's work, left as a
+  known out-of-scope defect (not in `MIGRATED_HARNESSES`, not touched by this refactor).
+  Gates: root 191/191; research build clean 49/49 doctor OK; example build clean 194/194+7skip
+  doctor OK verify-claims 3/3; solo-hackathon doctor OK (tsc pre-existing-broken, noted above).
+  Committed as `cef572d` (message required a `--amend` fix — shell backtick expansion mangled the
+  first `-m` string; refixed via heredoc, a mechanical error not a content issue).
+- **User clarification received mid-iteration (2026-07-17):** "The subfolders in harness/ must be
+  part of the output from the root (meta-harness). They should not be operated on by the root
+  meta-harness once created. The harness folder requires its own CLAUDE.md for separation." This
+  sharpens the existing governing constraint (top of this doc): not just "don't hand-edit harness
+  source," but the root meta-harness tooling itself (`meta/`, `base-scripts/`) should not reach into
+  a harness and modify it post-creation — a harness, once created, is read/executed, never patched
+  in place. Addressed by adding `harness/CLAUDE.md` (separation contract, next action this
+  iteration). Does not retroactively invalidate iter 1/2's backfill work — Approach A was explicitly
+  approved as a one-time transitional migration to *reach* the state where this separation holds;
+  it does license new direct edits going forward.
+- **Next:** §4 (port the template's/`veritas-research`'s mission-execution CLI so a created harness
+  is usable beyond `planes`, and finish the Mission/evidence-gate API migration for
+  `solo-hackathon`/the template — direct dependency of the §3.3 follow-up and the §8 gap above), or
+  §6 (root↔harness hygiene: move `harness/INSTALLATION.md` to root docs, normalize the
+  research/example interface asymmetry) — whichever the next session picks up.

@@ -1,4 +1,5 @@
 {
+  "extends": "../../tsconfig.spine-paths.json",
   "compilerOptions": {
     "lib": ["ESNext"],
     "target": "ESNext",
@@ -12,9 +13,6 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
-
-    "baseUrl": ".",
-    "paths": { "@spine/*": ["../../core/spine/*"] },
 
     "strict": true,
     "skipLibCheck": true,

@@ -5,6 +5,7 @@
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { resolveSpineOrLocal } from "./lib/resolve-spine.mjs";
 
 const root = process.cwd();
 const checks = [];
@@ -32,9 +33,7 @@ else fail("Node version", `v${process.versions.node} (need >= 18)`);
 // (via the @spine/* alias in their own src/); doctor.mjs runs standalone, so
 // it resolves the same file directly. Unmigrated harnesses (still carrying
 // their own local src/config/index.ts) fall back to that copy.
-const localConfigPath = join(root, "src/config/index.ts");
-const spineConfigPath = join(root, "../../core/spine/config/index.ts");
-const configPath = existsSync(localConfigPath) ? localConfigPath : spineConfigPath;
+const configPath = resolveSpineOrLocal(root, "config/index.ts");
 if (existsSync(configPath)) {
   try {
     const { loadConfig, redactedConfig, configDirectory, getProviderDef } =

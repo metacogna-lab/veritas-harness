@@ -12,7 +12,7 @@
     "create-harness": "bun meta/create-harness.ts",
     "list-harnesses": "bun meta/list-harnesses.ts",
     "harness-doctor": "bun meta/doctor.ts",
-    "test": "bun test meta core/spine"
+    "test": "bun test meta core/spine base-scripts"
   },
   "dependencies": {
     "zod": "^4.4.3"

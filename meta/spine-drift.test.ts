@@ -39,9 +39,14 @@ function listHarnesses(): string[] {
 // intentionally excluded from the drift check below until that lands.
 const MIGRATED_HARNESSES = ["veritas-research", "veritas-example"];
 
+// Computed once and shared by both tests below (rather than each test
+// re-walking core/spine/ independently). Guarded by existsSync so a missing
+// spine directory fails the first test cleanly instead of crashing at
+// module load.
+const spineFiles = existsSync(SPINE_DIR) ? walkFiles(SPINE_DIR).map((f) => relative(SPINE_DIR, f)) : [];
+
 test("spine exists and covers the expected planes", () => {
   expect(existsSync(SPINE_DIR)).toBe(true);
-  const spineFiles = walkFiles(SPINE_DIR).map((f) => relative(SPINE_DIR, f));
   const dirs = new Set(spineFiles.map((f) => f.split("/")[0]));
   for (const expected of ["safety", "tools", "mission", "evidence", "parse", "config", "llm", "orchestration"]) {
     expect(dirs.has(expected)).toBe(true);
@@ -49,7 +54,6 @@ test("spine exists and covers the expected planes", () => {
 });
 
 test("spine drift: no migrated harness re-embeds a canonical core/spine module", () => {
-  const spineFiles = walkFiles(SPINE_DIR).map((f) => relative(SPINE_DIR, f));
   const offenders: string[] = [];
   const registered = listHarnesses();
 
